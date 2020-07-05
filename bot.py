@@ -22,6 +22,6 @@ categories = {
     "Tarkov": "491931"
 }
 
-
-r = requests.get("https://api.twitch.tv/helix/games/top", headers = headers)
-print(json.dumps(r.json(), indent = 4))
+r = requests.get(api_endpoint + f'?game_id={categories["Fortnite"]}',
+                 headers=headers)
+print(r.json())
