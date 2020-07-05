@@ -1,8 +1,9 @@
-import threading
 from datetime import datetime, timedelta
 from auth import client_id, client_secret, token, requests, json
+from edit import video_length_seconds
 
 # if __name__ == '__main__'
+#create function to sort clip chronologically
 
 def get_clips(daysdiff, game_name):
     d = datetime.utcnow() - timedelta(days=daysdiff)
@@ -21,8 +22,8 @@ def process_clips(clips, language):
     processed_clips = [clip for clip in clips if language in clip["language"]]
     return processed_clips
 
-def downloadfile(name, url):
-    r=requests.get(url)
+def downloadfile(name, url, s):
+    r=s.get(url)
     f=open(f'videos/{name}.mp4','wb');
     for chunk in r.iter_content(chunk_size=1024*1024):
         if chunk:
@@ -57,5 +58,6 @@ clips = get_clips(2, "Fortnite")
 processed_clips = process_clips(clips, "en")
 print(json.dumps(processed_clips, indent = 4))
 
+s = requests.Session()
 for i, clip in enumerate(processed_clips):
-    downloadfile(i, clip["video_url"])
+    downloadfile(i, clip["video_url"], s)
