@@ -1,9 +1,8 @@
 from datetime import datetime, timedelta
 from auth import client_id, client_secret, token, requests, json
-from edit import video_length_seconds
+from edit import video_length_seconds, get_total_length, change_fps
 
 # if __name__ == '__main__'
-#create function to sort clip chronologically
 
 def get_clips(daysdiff, game_name):
     d = datetime.utcnow() - timedelta(days=daysdiff)
@@ -30,6 +29,10 @@ def downloadfile(name, url, s):
             f.write(chunk)
     f.close()
 
+def sort_clips_chronologically(arg):
+    arg.sort(key=lambda k : k["created_at"])
+
+
 api_endpoint = "https://api.twitch.tv/helix/clips"
 headers = {'Client-ID': client_id,
            "Authorization": "Bearer {}".format(token)}
@@ -51,13 +54,29 @@ categories = {
     "Tarkov": "491931"
 }
 
+shoutouts = []
 unnecessary_stats = ["embed_url", "creator_id", "creator_name", "game_id",
-                     "view_count", "created_at", "thumbnail_url"]
+                     "view_count", "thumbnail_url"]
 
 clips = get_clips(2, "Fortnite")
 processed_clips = process_clips(clips, "en")
+#sort_clips_chronologically(processed_clips)
+
 print(json.dumps(processed_clips, indent = 4))
 
+length = get_total_length()
 s = requests.Session()
+
+
 for i, clip in enumerate(processed_clips):
+    if length >= 601:
+        break
+    if(clip["broadcaster_name"] not in shoutouts):
+        shoutouts.append(clip["broadcaster_name"].lower())
     downloadfile(i, clip["video_url"], s)
+    length = get_total_length()
+    print(length)
+
+print(shoutouts)
+#sleep(20)
+change_fps()
