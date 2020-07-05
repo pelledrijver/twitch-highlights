@@ -6,7 +6,6 @@ f_secrets = open('secrets.txt', 'r')
 client_id = f_secrets.readline().strip()
 client_secret = f_secrets.readline().strip()
 f_secrets.close()
-print(client_id, client_secret)
 
 postlink = "https://id.twitch.tv/oauth2/token?client_id={}&client_secret={}&grant_type={}".format(
             client_id, client_secret, "client_credentials")

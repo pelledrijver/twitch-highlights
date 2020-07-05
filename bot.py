@@ -1,9 +1,14 @@
 from auth import client_id, client_secret, token, requests, json
+from datetime import datetime, timedelta
 # if __name__ == '__main__'
 
 api_endpoint = "https://api.twitch.tv/helix/clips"
 headers = {'Client-ID': client_id,
            "Authorization": "Bearer {}".format(token)}
+first = 100
+daysdiff = 2
+d = datetime.utcnow() - timedelta(days=daysdiff)
+started_at = d.isoformat("T") + "Z"
 
 categories = {
     "League of Legends": "21779",
@@ -22,6 +27,9 @@ categories = {
     "Tarkov": "491931"
 }
 
-r = requests.get(api_endpoint + f'?game_id={categories["Fortnite"]}',
+video_loc = "https://clips-media-assets2.twitch.tv/AT-cm%7C"
+
+
+r = requests.get(api_endpoint + f'?game_id={categories["Fortnite"]}&first=100&started_at={started_at}',
                  headers=headers)
-print(r.json())
+print(json.dumps(r.json()["data"], indent = 4))
