@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from auth import client_id, client_secret, token, requests, json
-from edit import video_length_seconds, get_total_length, change_fps
-
+from auth import *
+from edit import video_length_seconds, get_total_length, change_fps, is_copyright
+import os
 # if __name__ == '__main__'
 
 def get_clips(daysdiff, game_name):
@@ -21,13 +21,18 @@ def process_clips(clips, language):
     processed_clips = [clip for clip in clips if language in clip["language"]]
     return processed_clips
 
-def downloadfile(name, url, s):
+def downloadfile(name, url, s, broadcaster_name):
     r=s.get(url)
     f=open(f'videos/{name}.mp4','wb');
     for chunk in r.iter_content(chunk_size=1024*1024):
         if chunk:
             f.write(chunk)
     f.close()
+    if is_copyright(name, re):
+        os.remove(f'videos/{name}.mp4')
+    else:
+        shoutouts.add(broadcaster_name.lower())
+
 
 def sort_clips_chronologically(arg):
     arg.sort(key=lambda k : k["created_at"])
@@ -54,15 +59,15 @@ categories = {
     "Tarkov": "491931"
 }
 
-shoutouts = []
+shoutouts = set()
 unnecessary_stats = ["embed_url", "creator_id", "creator_name", "game_id",
                      "view_count", "thumbnail_url"]
 
-clips = get_clips(2, "Fortnite")
+clips = get_clips(2, "Apex Legends")
 processed_clips = process_clips(clips, "en")
 #sort_clips_chronologically(processed_clips)
 
-print(json.dumps(processed_clips, indent = 4))
+#print(json.dumps(processed_clips, indent = 4))
 
 length = get_total_length()
 s = requests.Session()
@@ -71,12 +76,10 @@ s = requests.Session()
 for i, clip in enumerate(processed_clips):
     if length >= 601:
         break
-    if(clip["broadcaster_name"] not in shoutouts):
-        shoutouts.append(clip["broadcaster_name"].lower())
-    downloadfile(i, clip["video_url"], s)
+
+    downloadfile(i, clip["video_url"], s, clip["broadcaster_name"])
     length = get_total_length()
     print(length)
 
 print(shoutouts)
 #sleep(20)
-change_fps()

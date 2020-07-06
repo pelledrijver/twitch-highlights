@@ -3,6 +3,11 @@ from pathlib import Path
 import subprocess
 
 
+import os, sys
+from acrcloud.recognizer import ACRCloudRecognizer
+from acrcloud.recognizer import ACRCloudRecognizeType
+import json
+
 
 def video_length_seconds(filename):
     result = subprocess.run(
@@ -32,9 +37,20 @@ def get_total_length():
 def change_fps():
     pass
 
+def is_copyright(name, re):
+    path = f'videos/{name}.mp4'
+    result = json.loads(re.recognize_by_file(path, 0, 10))
+    if result["status"]["msg"] == "No result":
+        return False
+    else:
+        return True
+
 #videos = [f for f in os.listdir("./videos") if os.path.isfile(os.path.join("./videos", f))]
 #videos.sort()
 #for video in videos:
 #    os.system(f'ffmpeg -i ./videos/{video} -r 60 ./videos/new_{video}')
 
 #find videos/*.mp4 | sed 's:\ :\\\ :g'| sed 's/^/file /' > fl.txt; ffmpeg -f concat -i fl.txt -c copy output.mp4; rm fl.txt
+
+#video to audio:
+#ffmpeg -y -i [input] -ac 1 -ar 8000 -ss [offset] -t [duration] out.wav
