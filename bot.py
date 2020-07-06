@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from auth import *
-from edit import video_length_seconds, get_total_length, change_fps, is_copyright
+from edit import video_length_seconds, get_total_length, change_fps, is_copyright, merge_videos
 import os
 # if __name__ == '__main__'
 
@@ -28,11 +28,11 @@ def downloadfile(name, url, s, broadcaster_name):
         if chunk:
             f.write(chunk)
     f.close()
-    if is_copyright(name, re):
-        os.remove(f'videos/{name}.mp4')
-    else:
+    if not is_copyright(name, re):
         shoutouts.add(broadcaster_name.lower())
+        os.system(f'HandBrakeCLI -i /home/pelle/Bot/videos/{name}.mp4  Genius.flv -o /home/pelle/Bot/videos/out_{name}.mp4 --preset="Vimeo YouTube HQ 1080p60"')
 
+    os.remove(f'videos/{name}.mp4')
 
 def sort_clips_chronologically(arg):
     arg.sort(key=lambda k : k["created_at"])
@@ -82,4 +82,5 @@ for i, clip in enumerate(processed_clips):
     print(length)
 
 print(shoutouts)
+merge_videos()
 #sleep(20)

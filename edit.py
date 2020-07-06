@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 import subprocess
 
-
 import os, sys
 from acrcloud.recognizer import ACRCloudRecognizer
 from acrcloud.recognizer import ACRCloudRecognizeType
@@ -45,6 +44,14 @@ def is_copyright(name, re):
     else:
         return True
 
+
+def merge_videos():
+    os.system("find videos/*.mp4 | sed 's:\ :\\\ :g'| sed 's/^/file /' > fl.txt; ffmpeg -f concat -i fl.txt -c copy output.mp4; rm fl.txt")
+    filelist = [ f for f in os.listdir("./videos") if f.endswith(".mp4") ]
+    for f in filelist:
+        os.remove(os.path.join("./videos", f))
+
+
 #videos = [f for f in os.listdir("./videos") if os.path.isfile(os.path.join("./videos", f))]
 #videos.sort()
 #for video in videos:
@@ -54,3 +61,4 @@ def is_copyright(name, re):
 
 #video to audio:
 #ffmpeg -y -i [input] -ac 1 -ar 8000 -ss [offset] -t [duration] out.wav
+#HandBrakeCLI -i /home/pelle/Bot/videos/3.mp4  Genius.flv -o /home/pelle/Bot/videos/new_3.mp4 --preset="Vimeo YouTube HQ 1080p60"

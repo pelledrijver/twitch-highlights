@@ -5,6 +5,7 @@ import os, sys
 from acrcloud.recognizer import ACRCloudRecognizer
 from acrcloud.recognizer import ACRCloudRecognizeType
 
+
 f_secrets = open('secrets.txt', 'r')
 
 client_id = f_secrets.readline().strip()
