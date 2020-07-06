@@ -13,6 +13,7 @@ client_secret = f_secrets.readline().strip()
 acr_host = f_secrets.readline().strip()
 acr_key = f_secrets.readline().strip()
 acr_secret = f_secrets.readline().strip()
+yt_key = f_secrets.readline().strip()
 f_secrets.close()
 
 postlink = "https://id.twitch.tv/oauth2/token?client_id={}&client_secret={}&grant_type={}".format(

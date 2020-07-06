@@ -63,7 +63,7 @@ shoutouts = set()
 unnecessary_stats = ["embed_url", "creator_id", "creator_name", "game_id",
                      "view_count", "thumbnail_url"]
 
-clips = get_clips(2, "Apex Legends")
+clips = get_clips(2, "Fortnite")
 processed_clips = process_clips(clips, "en")
 #sort_clips_chronologically(processed_clips)
 

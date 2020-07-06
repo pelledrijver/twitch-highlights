@@ -39,10 +39,7 @@ def change_fps():
 def is_copyright(name, re):
     path = f'videos/{name}.mp4'
     result = json.loads(re.recognize_by_file(path, 0, 10))
-    if result["status"]["msg"] == "No result":
-        return False
-    else:
-        return True
+    return result["status"]["msg"] != "No result"
 
 
 def merge_videos():
