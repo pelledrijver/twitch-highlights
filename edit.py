@@ -43,7 +43,7 @@ def is_copyright(name, re):
 
 
 def merge_videos():
-    os.system("find videos/*.mp4 | sed 's:\ :\\\ :g'| sed 's/^/file /' > fl.txt; ffmpeg -f concat -i fl.txt -c copy output.mp4; rm fl.txt")
+    os.system("find videos/*.mp4 | sed 's:\ :\\\ :g'| sed 's/^/file /' > fl.txt; ffmpeg -f concat -i fl.txt -c copy apex_output.mp4; rm fl.txt")
     filelist = [ f for f in os.listdir("./videos") if f.endswith(".mp4") ]
     for f in filelist:
         os.remove(os.path.join("./videos", f))

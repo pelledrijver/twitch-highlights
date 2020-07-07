@@ -37,6 +37,8 @@ def downloadfile(name, url, s, broadcaster_name):
 def sort_clips_chronologically(arg):
     arg.sort(key=lambda k : k["created_at"])
 
+def sort_clips_popularity(arg):
+    arg.sort(key=lambda k : k["view_count"])
 
 api_endpoint = "https://api.twitch.tv/helix/clips"
 headers = {'Client-ID': client_id,
@@ -60,10 +62,9 @@ categories = {
 }
 
 shoutouts = set()
-unnecessary_stats = ["embed_url", "creator_id", "creator_name", "game_id",
-                     "view_count", "thumbnail_url"]
+unnecessary_stats = ["embed_url", "creator_id", "creator_name", "game_id", "thumbnail_url"]
 
-clips = get_clips(2, "Fortnite")
+clips = get_clips(2, "Apex Legends")
 processed_clips = process_clips(clips, "en")
 #sort_clips_chronologically(processed_clips)
 
