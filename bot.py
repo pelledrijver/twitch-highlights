@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 from auth import *
 from edit import video_length_seconds, get_total_length, change_fps, is_copyright, merge_videos
+from upload_video import *
 import os
 # if __name__ == '__main__'
 
-def get_clips(daysdiff, game_name):
+def get_clips_by_cat(daysdiff, game_name):
     d = datetime.utcnow() - timedelta(days=daysdiff)
     started_at = d.isoformat("T") + "Z"
     r = requests.get(api_endpoint + f'?game_id={categories[game_name]}&first=100&started_at={started_at}',
@@ -64,18 +65,19 @@ categories = {
 shoutouts = set()
 unnecessary_stats = ["embed_url", "creator_id", "creator_name", "game_id", "thumbnail_url"]
 
-clips = get_clips(2, "Apex Legends")
+clips = get_clips_by_cat(1, "Fortnite")
 processed_clips = process_clips(clips, "en")
+title = processed_clips[0]["title"]
 #sort_clips_chronologically(processed_clips)
 
-#print(json.dumps(processed_clips, indent = 4))
+print(json.dumps(processed_clips, indent = 4))
 
 length = get_total_length()
 s = requests.Session()
 
 
 for i, clip in enumerate(processed_clips):
-    if length >= 601:
+    if length >= 0:
         break
 
     downloadfile(i, clip["video_url"], s, clip["broadcaster_name"])
@@ -83,5 +85,6 @@ for i, clip in enumerate(processed_clips):
     print(length)
 
 print(shoutouts)
-merge_videos()
+#merge_videos()
+upload_video("0.mp4", create_description(shoutouts), title)
 #sleep(20)
