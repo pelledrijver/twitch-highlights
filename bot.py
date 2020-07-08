@@ -5,12 +5,26 @@ from upload_video import *
 import os
 # if __name__ == '__main__'
 
-def get_clips_by_cat(daysdiff, game_name):
+def get_clips_by_cat(daysdiff, category):
     d = datetime.utcnow() - timedelta(days=daysdiff)
     started_at = d.isoformat("T") + "Z"
-    r = requests.get(api_endpoint + f'?game_id={categories[game_name]}&first=100&started_at={started_at}',
+    r = requests.get(api_endpoint + f'?game_id={categories[category]}&first=100&started_at={started_at}',
                      headers=headers)
     return r.json()["data"]
+
+def get_clips_by_streamer(streamer, daysdiff):
+    d = datetime.utcnow() - timedelta(days=daysdiff)
+    started_at = d.isoformat("T") + "Z"
+    d = datetime.utcnow()
+    ended_at = d.isoformat("T") + "Z"
+
+    r1 = requests.get("https://api.twitch.tv/helix/users?login={}".format(streamer), headers=headers)
+    broadcaster_id = r1.json()["data"][0]["id"]
+
+    r2 = requests.get(api_endpoint + f'?broadcaster_id={broadcaster_id}&first=100&started_at={started_at}&ended_at={ended_at}',
+                     headers=headers)
+    return r2.json()["data"]
+
 
 def process_clips(clips, language):
     for clip in clips:
@@ -22,7 +36,7 @@ def process_clips(clips, language):
     processed_clips = [clip for clip in clips if language in clip["language"]]
     return processed_clips
 
-def downloadfile(name, url, s, broadcaster_name):
+def downloadfile(name, url, s, broadcaster_name, shoutouts):
     r=s.get(url)
     f=open(f'videos/{name}.mp4','wb');
     for chunk in r.iter_content(chunk_size=1024*1024):
@@ -40,6 +54,58 @@ def sort_clips_chronologically(arg):
 
 def sort_clips_popularity(arg):
     arg.sort(key=lambda k : k["view_count"])
+
+def make_video_by_cat(category, daysdiff = 1, sort_chron = False):
+    clips = get_clips_by_cat(daysdiff, category)
+    shoutouts = set()
+    processed_clips = process_clips(clips, "en")
+    title = processed_clips[0]["title"]
+
+    if sort_chron:
+        sort_clips_chronologically(processed_clips)
+
+    print(json.dumps(processed_clips, indent = 4))
+
+    with requests.Session() as s:
+        for i, clip in enumerate(processed_clips):
+            length = get_total_length()
+            print(length)
+            if length >= 601:
+                break
+            downloadfile(i, clip["video_url"], s, clip["broadcaster_name"], shoutouts)
+
+    print(shoutouts)
+    output_name = "video_output.mp4"
+    merge_videos(output_name)
+    upload_video(output_name, create_description(shoutouts), title, category)
+
+def make_video_by_streamer(streamers, category = "", daysdiff = 1, sort_chron = True):
+    clips = []
+    for streamer in streamers:
+        clips += get_clips_by_streamer(streamer, daysdiff)
+    if sort_chron:
+        clips = clips[:120]
+        sort_clips_chronologically(clips)
+
+    if category:
+        pass
+    else:
+        processed_clips = clips
+
+    print(json.dumps(processed_clips, indent = 4))
+
+    with requests.Session() as s:
+        for i, clip in enumerate(processed_clips):
+            length = get_total_length()
+            print(length)
+            if length >= 601:
+                break
+            downloadfile(i, clip["video_url"], s, clip["broadcaster_name"], shoutouts)
+
+    print(shoutouts)
+    output_name = "video_output.mp4"
+    merge_videos(output_name)
+    upload_video(output_name, create_description(shoutouts), title, category)
 
 api_endpoint = "https://api.twitch.tv/helix/clips"
 headers = {'Client-ID': client_id,
@@ -62,29 +128,8 @@ categories = {
     "Tarkov": "491931"
 }
 
-shoutouts = set()
+
 unnecessary_stats = ["embed_url", "creator_id", "creator_name", "game_id", "thumbnail_url"]
 
-clips = get_clips_by_cat(1, "Fortnite")
-processed_clips = process_clips(clips, "en")
-title = processed_clips[0]["title"]
-#sort_clips_chronologically(processed_clips)
-
-print(json.dumps(processed_clips, indent = 4))
-
-length = get_total_length()
-s = requests.Session()
-
-
-for i, clip in enumerate(processed_clips):
-    if length >= 0:
-        break
-
-    downloadfile(i, clip["video_url"], s, clip["broadcaster_name"])
-    length = get_total_length()
-    print(length)
-
-print(shoutouts)
-#merge_videos()
-upload_video("0.mp4", create_description(shoutouts), title)
-#sleep(20)
+#make_video_by_cat("Fortnite")
+print(json.dumps(get_clips_by_streamer("tfue", 1000), indent = 4))

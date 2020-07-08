@@ -42,8 +42,8 @@ def is_copyright(name, re):
     return result["status"]["msg"] != "No result"
 
 
-def merge_videos():
-    os.system("find videos/*.mp4 | sed 's:\ :\\\ :g'| sed 's/^/file /' > fl.txt; ffmpeg -f concat -i fl.txt -c copy fortnite_output.mp4; rm fl.txt")
+def merge_videos(output_name):
+    os.system("find videos/*.mp4 | sed 's:\ :\\\ :g'| sed 's/^/file /' > fl.txt; ffmpeg -f concat -i fl.txt -c copy {}; rm fl.txt".format(output_name))
     filelist = [ f for f in os.listdir("./videos") if f.endswith(".mp4") ]
     for f in filelist:
         os.remove(os.path.join("./videos", f))
