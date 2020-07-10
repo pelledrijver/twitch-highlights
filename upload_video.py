@@ -2,12 +2,12 @@ import os
 import datetime as dt
 import json
 
-def upload_video(filename, description, title, game):
-    d = dt.datetime.utcnow() + dt.timedelta(hours=1, minutes=30)
+def upload_video(filename, description, title, game, uploadtime_diff):
+    d = dt.datetime.utcnow() + uploadtime_diff
     publishtime = d.replace(tzinfo=dt.timezone.utc).isoformat()
 
     metaJSON = {}
-    metaJSON["title"] = title + " - CRAZY {} Highlights".format(game)
+    metaJSON["title"] = title
     metaJSON["description"] = description
     metaJSON["privacyStatus"] = "private"
     metaJSON["publishAt"] = publishtime

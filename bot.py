@@ -45,7 +45,7 @@ def downloadfile(name, url, s, broadcaster_name, shoutouts):
     f.close()
     if not is_copyright(name, re):
         shoutouts.add(broadcaster_name.lower())
-        os.system(f'HandBrakeCLI -i /home/pelle/Bot/videos/{name}.mp4  Genius.flv -o /home/pelle/Bot/videos/out_{name}.mp4 --preset="Vimeo YouTube HQ 1080p60"')
+        os.system(f'HandBrakeCLI -i videos/{name}.mp4  -o videos/out_{name}.mp4 --preset="Vimeo YouTube HQ 1080p60" --width 1920 --height 1080')
 
     os.remove(f'videos/{name}.mp4')
 
@@ -55,11 +55,15 @@ def sort_clips_chronologically(arg):
 def sort_clips_popularity(arg):
     arg.sort(key=lambda k : k["view_count"])
 
-def make_video_by_cat(category, daysdiff = 1, sort_chron = False):
+def make_video_by_cat(category, daysdiff = 1, sort_chron = False, uploadtime_diff = 1, custom_title=""):
     clips = get_clips_by_cat(daysdiff, category)
     shoutouts = set()
     processed_clips = process_clips(clips, "en")
-    title = processed_clips[0]["title"]
+
+    if custom_title:
+        title = custom_title
+    else:
+        title = processed_clips[0]["title"].title() + " - {} Highlights".format(category)
 
     if sort_chron:
         sort_clips_chronologically(processed_clips)
@@ -77,22 +81,29 @@ def make_video_by_cat(category, daysdiff = 1, sort_chron = False):
     print(shoutouts)
     output_name = "video_output.mp4"
     merge_videos(output_name)
-    upload_video(output_name, create_description(shoutouts), title, category)
+    upload_video(output_name, create_description(shoutouts), title, category, timedelta(hours=uploadtime_diff))
 
-def make_video_by_streamer(streamers, category = "", daysdiff = 1, sort_chron = True):
+def make_video_by_streamer(streamers, category = "", daysdiff = 1, sort_chron = True, uploadtime_diff = timedelta(hours=1), custom_title = ""):
     clips = []
+    shoutouts = set()
+
     for streamer in streamers:
         clips += get_clips_by_streamer(streamer, daysdiff)
+
+    if category:
+        pass
+
     if sort_chron:
         clips = clips[:120]
         sort_clips_chronologically(clips)
 
-    if category:
-        pass
-    else:
-        processed_clips = clips
-
+    processed_clips = process_clips(clips, "en")
     print(json.dumps(processed_clips, indent = 4))
+
+    if custom_title:
+        title = custom_title
+    else:
+        title = processed_clips[0]["title"].title() + " - {} Highlights".format(category)
 
     with requests.Session() as s:
         for i, clip in enumerate(processed_clips):
@@ -105,7 +116,7 @@ def make_video_by_streamer(streamers, category = "", daysdiff = 1, sort_chron = 
     print(shoutouts)
     output_name = "video_output.mp4"
     merge_videos(output_name)
-    upload_video(output_name, create_description(shoutouts), title, category)
+    upload_video(output_name, create_description(shoutouts), title, category, timedelta(hours=uploadtime_diff))
 
 api_endpoint = "https://api.twitch.tv/helix/clips"
 headers = {'Client-ID': client_id,
@@ -120,7 +131,7 @@ categories = {
     "GTA V": "32982",
     "Minecraft": "27471",
     "CSGO": "32399",
-    "Hyper Space": "518306",
+    "Hyperscape": "518306",
     "Valorant": "516575",
     "WoW": "18122",
     "Tarkov": "491931",
@@ -131,5 +142,7 @@ categories = {
 
 unnecessary_stats = ["embed_url", "creator_id", "creator_name", "game_id", "thumbnail_url"]
 
-#make_video_by_cat("Fortnite")
-print(json.dumps(get_clips_by_streamer("tfue", 1000), indent = 4))
+
+#make_video_by_cat("Just Chatting", uploadtime_diff=dt.timedelta(hours=1))
+#make_video_by_streamer(["swaggersouls"], daysdiff = 30, sort_chron = False, custom_title = "SwaggerSouls finds out that Spongebob is gay")
+make_video_by_streamer(["benjyfishy"], daysdiff = 1000, sort_chron = False, custom_title = "These moments made benjyfishy famous", uploadtime_diff=3)
