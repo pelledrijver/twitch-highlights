@@ -28,7 +28,6 @@ def video_length_seconds(filename):
     except ValueError:
         raise ValueError(result.stderr.rstrip("\n"))
 
-length = 0
 
 def get_total_length():
     return sum(video_length_seconds(f) for f in Path("./videos").iterdir() if f.is_file())
@@ -36,9 +35,9 @@ def get_total_length():
 def change_fps():
     pass
 
-def is_copyright(name, re):
+def is_copyright(name, copyright_recognizer):
     path = f'videos/{name}.mp4'
-    result = json.loads(re.recognize_by_file(path, 0, 10))
+    result = json.loads(copyright_recognizer.recognize_by_file(path, 0, 10))
     return result["status"]["msg"] != "No result"
 
 
