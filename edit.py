@@ -1,60 +1,36 @@
 import os
 from pathlib import Path
 import subprocess
-
 import os, sys
-from acrcloud.recognizer import ACRCloudRecognizer
-from acrcloud.recognizer import ACRCloudRecognizeType
 import json
+from moviepy.editor import VideoFileClip, concatenate_videoclips
 
 
-def video_length_seconds(filename):
-    result = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-show_entries",
-            "format=duration",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
-            filename,
-        ],
-        capture_output=True,
-        text=True,
-    )
-    try:
-        return float(result.stdout)
-    except ValueError:
-        raise ValueError(result.stderr.rstrip("\n"))
+def get_merged_length(clip_list):
+    return sum(clip.duration for clip in clip_list)
 
 
-def get_total_length():
-    return sum(video_length_seconds(f) for f in Path("./videos").iterdir() if f.is_file())
 
-def change_fps():
-    pass
-
-def is_copyright(name, copyright_recognizer):
-    path = f'videos/{name}.mp4'
-    result = json.loads(copyright_recognizer.recognize_by_file(path, 0, 10))
-    return result["status"]["msg"] != "No result"
+def add_clip(clip_list, path, target_resolution = (1080, 1920)):
+    clip_list = clip_list.append(VideoFileClip(path, target_resolution=target_resolution))
 
 
-def merge_videos(output_name):
-    os.system("find videos/*.mp4 | sed 's:\ :\\\ :g'| sed 's/^/file /' > fl.txt; ffmpeg -f concat -i fl.txt -c copy {}; rm fl.txt".format(output_name))
-    filelist = [ f for f in os.listdir("./videos") if f.endswith(".mp4") ]
-    for f in filelist:
-        os.remove(os.path.join("./videos", f))
+def merge_videos(clip_list, output_name, video_path):
+    merged_video = concatenate_videoclips(clip_list, method="compose")
+
+    merged_video.write_videofile(
+            f"{output_name}.mp4",
+            codec="libx264",
+            fps=60,
+            temp_audiofile="temp-audio.m4a",
+            remove_temp=True,
+            audio_codec="aac")
+
+    for clip in clip_list:
+        clip.close()
+    merged_video.close()
 
 
-#videos = [f for f in os.listdir("./videos") if os.path.isfile(os.path.join("./videos", f))]
-#videos.sort()
-#for video in videos:
-#    os.system(f'ffmpeg -i ./videos/{video} -r 60 ./videos/new_{video}')
-
-#find videos/*.mp4 | sed 's:\ :\\\ :g'| sed 's/^/file /' > fl.txt; ffmpeg -f concat -i fl.txt -c copy output.mp4; rm fl.txt
-
-#video to audio:
-#ffmpeg -y -i [input] -ac 1 -ar 8000 -ss [offset] -t [duration] out.wav
-#HandBrakeCLI -i /home/pelle/Bot/videos/3.mp4  Genius.flv -o /home/pelle/Bot/videos/new_3.mp4 --preset="Vimeo YouTube HQ 1080p60"
+    for file in os.listdir(video_path):
+        if file.endswith(".mp4"):
+            os.remove(os.path.join(video_path, file))
