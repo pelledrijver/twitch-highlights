@@ -56,7 +56,7 @@ Arguments:
 ### make_video_by_streamer
 Creates a highlight video consisting of trending clip from the provided category in the current directory.
 ```python
-highlight_generator.make_video_by_streamer(streamers = ["Ninja", "Myth]")
+highlight_generator.make_video_by_streamer(streamers = ["Ninja", "Myth"])
 ```
 Arguments:
 - **streamers**: List of streamer names to gather clips from.
