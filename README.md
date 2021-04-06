@@ -33,7 +33,7 @@ twitch_credentials = {
    "client_id": "1at6pyf0lvjk48san9j7fjak6hue2i",
    "client_secret": "5i2c7weuz1qmvtahrok6agi7nbqo7d"
 }
-highlight_generator.login(twitch_credentials)
+highlight_generator.login_twitch(twitch_credentials)
 ```
 Arguments:
 - **twitch_credentials**: Dictionary storing the *client_id* and *client_sectet* keys.
