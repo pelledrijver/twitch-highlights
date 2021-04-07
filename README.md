@@ -1,4 +1,9 @@
 # twitch-highlights
+[![GitHub](https://img.shields.io/github/license/pelledrijver/twitch-highlights)](https://github.com/pelledrijver/twitch-highlights/blob/master/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/twitch-highlights)](https://pypi.org/project/twitch-highlights/)
+[![GitHub Repo stars](https://img.shields.io/github/stars/pelledrijver/twitch-highlights)](https://github.com/pelledrijver/twitch-highlights/stargazers)
+[![Discord](https://img.shields.io/discord/829297778324537384?color=%237289da&label=discord)](https://discord.gg/SPCj7TURj7)
+
 An OS-independent and easy-to-use module for creating highlight videos from trending Twitch clips. Twitch highlight videos can be created by either specifying a category or a list of streamer names.  
 
 ## Getting started
