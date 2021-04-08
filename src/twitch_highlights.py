@@ -4,6 +4,12 @@ import requests
 import shutil
 from datetime import datetime, timedelta
 from moviepy.editor import VideoFileClip, concatenate_videoclips
+import random
+import proglog
+
+#added sort_by
+#remember proglog dependency
+#todo: add logger?
 
 def _sort_clips_chronologically(clips):
     clips.sort(key=lambda k : k["created_at"])
@@ -13,21 +19,69 @@ def _sort_clips_popularity(clips):
     clips.sort(key=lambda k : k["view_count"])
 
 
-def _merge_videos(clip_list, output_name):
+def _sort_clips_randomly(clips):
+    clips.sort(random.shuffle(clips))
+
+
+def _add_clip(clip_list, file_path, render_settings):
+    #TODO: Add transition + intro/outro functionality
+
+    newVideoFileClip = VideoFileClip(file_path, target_resolution=render_settings["target_resolution"])
+    clip_list.append(newVideoFileClip)
+
+def _combined_video_length(clip_list):
+    sum = 0
+    for clip in clip_list:
+        sum += clip.duration
+    return sum
+
+def _check_render_settings(render_settings):
+    if render_settings is None:
+        render_settings = dict()
+        render_settings["fps"] = 60
+        render_settings["target_resolution"] = (1920, 1080)
+        return render_settings
+
+    if 'intro_path' in render_settings:
+        pass #check if path is valid
+    
+    if 'outro_path' in render_settings:
+        pass #check if path is valid
+    
+    if 'transition_path' in render_settings:
+        pass #check if path is valid 
+    
+    if 'fps' not in render_settings:
+        render_settings['fps'] = 60
+    
+    if 'target_resolution' not in render_settings:
+        render_settings['target_resolution'] = (1920, 1080)
+
+    return render_settings
+
+def _merge_videos(clip_list, output_name, render_settings):
+
+    #TODO: add outro?
+
     merged_video = concatenate_videoclips(clip_list, method="compose")
 
+    print(f"Writing video file to {output_name}.mp4")
+    
     merged_video.write_videofile(
             f"{output_name}.mp4",
             codec="libx264",
-            fps=60,
+            fps=render_settings['fps'],
             temp_audiofile="temp-audio.m4a",
             remove_temp=True,
-            audio_codec="aac")
+            audio_codec="aac",
+            logger=proglog.TqdmProgressBarLogger(print_messages=False))
 
     merged_video.close() 
     for clip in clip_list:
         clip.close()
-    
+
+    print(f'Succesfully generated highlight clip {output_name}!')
+
 
 class TwitchHighlights:
     _TWITCH_OAUTH_ENDPOINT = "https://id.twitch.tv/oauth2/token"
@@ -50,6 +104,10 @@ class TwitchHighlights:
         query_parameters = f'?client_id={twitch_client_id}&client_secret={twitch_client_secret}&grant_type=client_credentials'
 
         response = requests.post(self._TWITCH_OAUTH_ENDPOINT + query_parameters)
+
+        if(response.status_code != 200):
+            raise Exception(response.json())
+
         twitch_token = response.json()['access_token']
 
         self.twitch_oauth_header = {"Client-ID": twitch_client_id,
@@ -66,40 +124,50 @@ class TwitchHighlights:
         return categories    
 
 
-    def make_video_by_category(self, category, output_name = "output_video", language = None, video_length = 300, started_at = datetime.utcnow() - timedelta(days=1), ended_at = datetime.utcnow(), target_resolution=(1080,1920)):
+    def make_video_by_category(self, category, output_name = "output_video", language = None, video_length = 300, started_at = datetime.utcnow() - timedelta(days=1), ended_at = datetime.utcnow(), render_settings = None, sort_by = "popularity"):
         clips = self._get_clips_by_category(category, started_at, ended_at)
-        self._create_video_from_json(clips, output_name, language, video_length, target_resolution)
+        self._create_video_from_json(clips, output_name, language, video_length, render_settings, sort_by)
 
 
-    def make_video_by_streamer(self, streamers, output_name = "output_video", language = None, video_length = 300, started_at = datetime.utcnow() - timedelta(days=1), ended_at = datetime.utcnow(), target_resolution=(1080,1920)):
+    def make_video_by_streamer(self, streamers, output_name = "output_video", language = None, video_length = 300, started_at = datetime.utcnow() - timedelta(days=1), ended_at = datetime.utcnow(), render_settings = None, sort_by = "popularity"):
         clips = []
 
         for streamer in streamers:
             clips += self._get_clips_by_streamer(streamer, started_at, ended_at)
 
         _sort_clips_popularity(clips)
-        self._create_video_from_json(clips, output_name, language, video_length, target_resolution)
+        self._create_video_from_json(clips, output_name, language, video_length, render_settings, sort_by)
 
 
-    def _create_video_from_json(self, clips, output_name, language, video_length, target_resolution):
-        print("Succesfully fetched clip data") 
+    def _create_video_from_json(self, clips, output_name, language, video_length, render_settings, sort_by):
+        print("Succesfully fetched clip data")
+
         self._preprocess_clips(clips, language)
 
+        render_settings = _check_render_settings(render_settings)
+
+        if sort_by == "random":
+            _sort_clips_randomly(clips)
+        elif sort_by == "popularity":
+            _sort_clips_popularity(clips)
+        elif sort_by == "chronologically":
+            _sort_clips_chronologically(clips)
+        else:
+            Exception(f'Sorting method {sort_by} not recognized.')
+
         clip_list = []
-        combined_length = 0
 
         with requests.Session() as s:
             for i, clip in enumerate(clips):
-                if combined_length >= video_length:
+                if _combined_video_length(clip_list) >= video_length:
                     break
                 
                 print(f'Downloading clip: {clip["broadcaster_name"]} - {clip["title"]}')
                 file_path = self._download_clip(s, clip, i)
-                newVideoFileClip = VideoFileClip(file_path, target_resolution=target_resolution)
-                clip_list.append(newVideoFileClip)
-                combined_length += newVideoFileClip.duration
 
-        _merge_videos(clip_list, output_name)
+                _add_clip(clip_list, file_path, render_settings)
+
+        _merge_videos(clip_list, output_name, render_settings)
         
         for file in os.listdir(self.tmpdir.name):
             os.remove(os.path.join(self.tmpdir.name, file))
@@ -115,6 +183,9 @@ class TwitchHighlights:
 
         response = requests.get(endpoint_url + query_parameters, headers=self.twitch_oauth_header)
         
+        if(response.status_code != 200):
+            raise Exception(response.json())
+
         if response.json()["data"] == None:
             raise Exception(error_message)
 
