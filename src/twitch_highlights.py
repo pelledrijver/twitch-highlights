@@ -1,15 +1,13 @@
-import tempfile
-import os
-import requests
-import shutil
 from datetime import datetime, timedelta
 from moviepy.editor import VideoFileClip, concatenate_videoclips
+import tempfile
+import requests
+import shutil
 import random
 import proglog
+import os
+from tqdm import tqdm
 
-#added sort_by
-#remember proglog dependency
-#todo: add logger?
 
 def _sort_clips_chronologically(clips):
     clips.sort(key=lambda k : k["created_at"])
@@ -24,12 +22,14 @@ def _sort_clips_randomly(clips):
 
 
 def _add_clip(clip_list, file_path, render_settings):
-    #TODO: Add transition + intro/outro functionality
+    if len(clip_list) == 0 and 'intro_path' in render_settings:
+        clip_list.append(VideoFileClip(render_settings['intro_path'], target_resolution=render_settings["target_resolution"]))
+    elif 'transition_path' in render_settings:
+        clip_list.append(render_settings['transition_path'], target_resolution=render_settings["target_resolution"])
 
-    newVideoFileClip = VideoFileClip(file_path, target_resolution=render_settings["target_resolution"])
-    clip_list.append(newVideoFileClip)
+    clip_list.append(VideoFileClip(file_path, target_resolution=render_settings["target_resolution"]))
 
-def _combined_video_length(clip_list):
+def _get_combined_video_length(clip_list):
     sum = 0
     for clip in clip_list:
         sum += clip.duration
@@ -42,31 +42,34 @@ def _check_render_settings(render_settings):
         render_settings["target_resolution"] = (1920, 1080)
         return render_settings
 
-    if 'intro_path' in render_settings:
-        pass #check if path is valid
-    
-    if 'outro_path' in render_settings:
-        pass #check if path is valid
-    
-    if 'transition_path' in render_settings:
-        pass #check if path is valid 
-    
     if 'fps' not in render_settings:
         render_settings['fps'] = 60
     
     if 'target_resolution' not in render_settings:
-        render_settings['target_resolution'] = (1920, 1080)
+        render_settings['target_resolution'] = (1920, 1080)    
+
+    if 'intro_path' in render_settings:
+        temp = VideoFileClip(render_settings['intro_path'], target_resolution=render_settings["target_resolution"])
+        temp.close()
+    
+    if 'outro_path' in render_settings:
+        temp = VideoFileClip(render_settings['outro_path'], target_resolution=render_settings["target_resolution"])
+        temp.close()
+    
+    if 'transition_path' in render_settings:
+        temp = VideoFileClip(render_settings['transition_path'], target_resolution=render_settings["target_resolution"])
+        temp.close()
 
     return render_settings
 
 def _merge_videos(clip_list, output_name, render_settings):
-
-    #TODO: add outro?
+    if 'outro_path' in render_settings:
+        clip_list.append(VideoFileClip(render_settings['outro_path'], target_resolution=render_settings["target_resolution"]))
 
     merged_video = concatenate_videoclips(clip_list, method="compose")
 
     print(f"Writing video file to {output_name}.mp4")
-    
+
     merged_video.write_videofile(
             f"{output_name}.mp4",
             codec="libx264",
@@ -92,11 +95,18 @@ class TwitchHighlights:
 
 
     def __init__(self, twitch_credentials = None):
-        self.tmpdir = tempfile.TemporaryDirectory()
+        self.tmpdir = tempfile.mkdtemp()
+        print(self.tmpdir)
 
         if(twitch_credentials):
             self.login_twitch(twitch_credentials)   
 
+    def __del__(self):
+        if hasattr(self, "clip_list"):
+            for clip in self.clip_list:
+                clip.close() 
+        
+        shutil.rmtree(self.tmpdir)
 
     def login_twitch(self, twitch_credentials):
         twitch_client_id = twitch_credentials["client_id"]
@@ -135,7 +145,6 @@ class TwitchHighlights:
         for streamer in streamers:
             clips += self._get_clips_by_streamer(streamer, started_at, ended_at)
 
-        _sort_clips_popularity(clips)
         self._create_video_from_json(clips, output_name, language, video_length, render_settings, sort_by)
 
 
@@ -143,7 +152,6 @@ class TwitchHighlights:
         print("Succesfully fetched clip data")
 
         self._preprocess_clips(clips, language)
-
         render_settings = _check_render_settings(render_settings)
 
         if sort_by == "random":
@@ -156,10 +164,11 @@ class TwitchHighlights:
             Exception(f'Sorting method {sort_by} not recognized.')
 
         clip_list = []
+        self.clip_list = clip_list
 
         with requests.Session() as s:
             for i, clip in enumerate(clips):
-                if _combined_video_length(clip_list) >= video_length:
+                if _get_combined_video_length(clip_list) >= video_length:
                     break
                 
                 print(f'Downloading clip: {clip["broadcaster_name"]} - {clip["title"]}')
@@ -169,8 +178,8 @@ class TwitchHighlights:
 
         _merge_videos(clip_list, output_name, render_settings)
         
-        for file in os.listdir(self.tmpdir.name):
-            os.remove(os.path.join(self.tmpdir.name, file))
+        for file in os.listdir(self.tmpdir):
+            os.remove(os.path.join(self.tmpdir, file))
 
 
     def _check_twitch_authentication(self):
@@ -204,19 +213,20 @@ class TwitchHighlights:
 
 
     def _download_clip(self, session, clip, id):
-        if not hasattr(self, "tmpdir"):
-            raise Exception("No temporary file storage available for downloaded clips.")
-
         video_url = clip["video_url"]
+        file_path = f'{self.tmpdir}/{id}.mp4'
 
-        file_path = f'{self.tmpdir.name}/{id}.mp4'
+        response = session.get(video_url, stream=True)
+        total_size_in_bytes= int(response.headers.get('content-length', 0))
+        progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
 
-        r=session.get(video_url)
         f=open(file_path,'wb')
-        for chunk in r.iter_content(chunk_size=1024*1024):
+        for chunk in response.iter_content(chunk_size=1024*1024):
             if chunk:
+                progress_bar.update(len(chunk))
                 f.write(chunk)
         f.close()
+        progress_bar.close()
 
         return file_path
 

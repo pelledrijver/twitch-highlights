@@ -16,8 +16,7 @@ setup(
     install_requires = [
         'requests', 
         'datetime',
-        'moviepy>=1.0.3',
-        'proglog<=1.0.0'       
+        'moviepy>=1.0.3'
     ],
     package_dir={'':'src'},
     packages=find_packages(),
