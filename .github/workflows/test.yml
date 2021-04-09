@@ -12,9 +12,10 @@ jobs:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       uses: Ilshidur/action-discord@master
       with:
-        args: >
-          Server Announcement! \n
-          Hi everyone! A new version of the twitch-highlights package has been released: v1 📦 \n\n 
+        args: |+
+          :loudspeaker: **Release Alert!** :loudspeaker:
+          Hi everyone! A new version of the twitch-highlights package has been released: ${{ github.event }} 📦
+          
           Take a look at the new features and their documentation at: https://github.com/pelledrijver/highlights-bot
         
     
