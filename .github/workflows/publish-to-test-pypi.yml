@@ -34,7 +34,7 @@ jobs:
     uses: Ilshidur/action-discord@master
     with:
       args: >
-      :rust: Server Announcement! :rust:
+      *Server Announcement!* \n
       Hi everyone! A new version of the twitch-highlights package has been released: {{ EVENT_PAYLOAD.release.tag_name }} 📦 \n\n 
       Take a look at the new features and their documentation at: https://github.com/pelledrijver/highlights-bot
       
