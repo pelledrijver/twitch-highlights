@@ -35,7 +35,7 @@ jobs:
       with:
         args: >
           Server Announcement! \n
-          Hi everyone! A new version of the twitch-highlights package has been released: {{ github.event.action }} 📦 \n\n 
+          Hi everyone! A new version of the twitch-highlights package has been released: v1 📦 \n\n 
           Take a look at the new features and their documentation at: https://github.com/pelledrijver/highlights-bot
         
   
