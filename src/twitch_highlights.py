@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta
 from moviepy.editor import VideoFileClip, concatenate_videoclips
+from datetime import datetime, timedelta
 import tempfile
 import requests
 import shutil
-import random
-import proglog
 import os
 from tqdm import tqdm
+import random
+import proglog
 
 
 def _sort_clips_chronologically(clips):
@@ -14,7 +14,7 @@ def _sort_clips_chronologically(clips):
 
 
 def _sort_clips_popularity(clips):
-    clips.sort(key=lambda k : k["view_count"])
+    clips.sort(key=lambda k : k["view_count"], reverse = True)
 
 
 def _sort_clips_randomly(clips):
@@ -24,8 +24,9 @@ def _sort_clips_randomly(clips):
 def _add_clip(clip_list, file_path, render_settings):
     if len(clip_list) == 0 and 'intro_path' in render_settings:
         clip_list.append(VideoFileClip(render_settings['intro_path'], target_resolution=render_settings["target_resolution"]))
-    elif 'transition_path' in render_settings:
-        clip_list.append(render_settings['transition_path'], target_resolution=render_settings["target_resolution"])
+    
+    if 'transition_path' in render_settings and len(clip_list) != 0:
+        clip_list.append(VideoFileClip(render_settings['transition_path'], target_resolution=render_settings["target_resolution"]))
 
     clip_list.append(VideoFileClip(file_path, target_resolution=render_settings["target_resolution"]))
 
@@ -35,34 +36,8 @@ def _get_combined_video_length(clip_list):
         sum += clip.duration
     return sum
 
-def _check_render_settings(render_settings):
-    if render_settings is None:
-        render_settings = dict()
-        render_settings["fps"] = 60
-        render_settings["target_resolution"] = (1920, 1080)
-        return render_settings
 
-    if 'fps' not in render_settings:
-        render_settings['fps'] = 60
-    
-    if 'target_resolution' not in render_settings:
-        render_settings['target_resolution'] = (1920, 1080)    
-
-    if 'intro_path' in render_settings:
-        temp = VideoFileClip(render_settings['intro_path'], target_resolution=render_settings["target_resolution"])
-        temp.close()
-    
-    if 'outro_path' in render_settings:
-        temp = VideoFileClip(render_settings['outro_path'], target_resolution=render_settings["target_resolution"])
-        temp.close()
-    
-    if 'transition_path' in render_settings:
-        temp = VideoFileClip(render_settings['transition_path'], target_resolution=render_settings["target_resolution"])
-        temp.close()
-
-    return render_settings
-
-def _merge_videos(clip_list, output_name, render_settings):
+def _merge_videos(clip_list, output_name, render_settings):  
     if 'outro_path' in render_settings:
         clip_list.append(VideoFileClip(render_settings['outro_path'], target_resolution=render_settings["target_resolution"]))
 
@@ -83,7 +58,36 @@ def _merge_videos(clip_list, output_name, render_settings):
     for clip in clip_list:
         clip.close()
 
-    print(f'Succesfully generated highlight clip {output_name}!')
+    print(f'Succesfully generated highlight video {output_name}!')
+
+
+
+def _check_render_settings(render_settings):
+    if render_settings is None:
+        render_settings = dict()
+        render_settings["fps"] = 60
+        render_settings["target_resolution"] = (1080, 1920)
+        return render_settings
+
+    if 'fps' not in render_settings:
+        render_settings['fps'] = 60
+    
+    if 'target_resolution' not in render_settings:
+        render_settings['target_resolution'] = (1080, 1920)    
+
+    if 'intro_path' in render_settings:
+        temp = VideoFileClip(render_settings['intro_path'], target_resolution=render_settings["target_resolution"])
+        temp.close()
+    
+    if 'outro_path' in render_settings:
+        temp = VideoFileClip(render_settings['outro_path'], target_resolution=render_settings["target_resolution"])
+        temp.close()
+    
+    if 'transition_path' in render_settings:
+        temp = VideoFileClip(render_settings['transition_path'], target_resolution=render_settings["target_resolution"])
+        temp.close()
+
+    return render_settings
 
 
 class TwitchHighlights:
@@ -96,7 +100,6 @@ class TwitchHighlights:
 
     def __init__(self, twitch_credentials = None):
         self.tmpdir = tempfile.mkdtemp()
-        print(self.tmpdir)
 
         if(twitch_credentials):
             self.login_twitch(twitch_credentials)   
@@ -184,7 +187,7 @@ class TwitchHighlights:
 
     def _check_twitch_authentication(self):
         if not hasattr(self, "twitch_oauth_header"):
-            raise Exception("Twitch authentication incomplete. Please authenticate using the login() method.")
+            raise Exception("Twitch authentication incomplete. Please authenticate using the login_twitch() method.")
 
 
     def _get_request(self, endpoint_url, query_parameters, error_message = "An error occurred"):

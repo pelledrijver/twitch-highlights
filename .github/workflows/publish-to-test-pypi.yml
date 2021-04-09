@@ -1,0 +1,42 @@
+name: Publish Python 🐍 distributions 📦 to PyPI
+
+on: release
+
+jobs:
+  build-n-publish:
+    name: Build and publish Python 🐍 distributions 📦 to PyPI
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel
+    - name: Build distributions
+      run: |
+        python setup.py sdist bdist_wheel
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+  discord-notification:
+    name: Send an announcement to the Discord community channel 💬
+    runs-on: ubuntu-latest
+    steps:
+    - name: Discord notification
+    env:
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+    uses: Ilshidur/action-discord@master
+    with:
+      args: >
+      :rust: Server Announcement! :rust:
+      Hi everyone! A new version of the twitch-highlights package has been released: {{ EVENT_PAYLOAD.release.tag_name }} 📦 \n\n 
+      Take a look at the new features and their documentation at: https://github.com/pelledrijver/highlights-bot
+      
+  
+
