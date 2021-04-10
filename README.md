@@ -30,7 +30,7 @@ Arguments:
 - **twitch_credentials**: *(optional)* Dictionary storing the *client_id* and *client_sectet* keys.
 
 ### login_twitch
-Performs the proper authentication steps using Twitch's OAuth procedure to get access to its API. This method must be called before any other methods on the TwitchHighlights object are called.
+Performs the proper authentication steps using Twitch's OAuth procedure to get access to its API. This method must be called before any other methods on the *TwitchHighlights* object are called. Information on how to obtain these credentials can be found [here](https://dev.twitch.tv/docs/authentication).
 
 ```python
 highlight_generator = TwitchHighlights()
@@ -53,10 +53,12 @@ Arguments:
 - **category**: Name of the category from which the clips are gathered (case-insensitive).
 - **output_name**: Name of the generated output mp4 file. Defaults to "*output_video*".
 - **language**: Preferred language of the clips to be included in the video. Note that the clip's language tag might not actually match the language spoken in the clip. Defaults to *None*, which means that no clips are removed.
-- **video_length**: Minimum length of the video to be created in seconds. Clips are added to the combined video until this length is reached. Defaults to 300.
+- **video_length**: Minimum length of the video to be created in seconds. Clips are added to the combined video until this length is reached. Defaults to *300*.
 - **started_at**: Starting date/time for included clips as a datetime object in the UTC standard. Defaults to exactly one day before the time at which the method is called.
 - **ended_at**: Ending date/time for included clips as a datetime object in the UTC standard. Defaults to the time at which the method is called.
-- **target_resolution**: Tuple containing (*desired_height*, *desired_width*) to which the resolution is resized. Defaults to (1080, 1920)
+- **render_settings**: Dictionary containing information used for rendering and combining the clips. More information [here](#render_settings). Defaults to *None*.
+- **sort_by**: Preferred ordering of clips (*"popularity", "chronologically", or "random"*). Defaults to *"popularity"*.
+
 
 ### make_video_by_streamer
 Creates a highlight video consisting of trending clip from the provided category in the current directory.
@@ -67,10 +69,12 @@ Arguments:
 - **streamers**: List of streamer names to gather clips from.
 - **output_name**: Name of the generated output mp4 file. Defaults to "*output_video*".
 - **language**: Preferred language of the clips to be included in the video. Note that the clip's language tag might not actually match the language spoken in the clip. Defaults to *None*, which means that no clips are removed.
-- **video_length**: Minimum length of the video to be created in seconds. Clips are added to the combined video until this length is reached. Defaults to 300.
+- **video_length**: Minimum length of the video to be created in seconds. Clips are added to the combined video until this length is reached. Defaults to *300*.
 - **started_at**: Starting date/time for included clips as a datetime object in the UTC standard. Defaults to exactly one day before the time at which the method is called.
 - **ended_at**: Ending date/time for included clips as a datetime object in the UTC standard. Defaults to the time at which the method is called.
-- **target_resolution**: Tuple containing (*desired_height*, *desired_width*) to which the resolution is resized. Defaults to (1080, 1920)
+- **render_settings**: Dictionary containing information used for rendering and combining the clips. More information [here](#render_settings). Defaults to *None*.
+- **sort_by**: Preferred ordering of clips (*"popularity", "chronologically", or "random"*). Defaults to *"popularity"*.
+
 
 ### get_top_categories
 Returns a list of the names of the most trending categories on Twitch at that moment. 
@@ -78,14 +82,23 @@ Returns a list of the names of the most trending categories on Twitch at that mo
 highlight_generator.get_top_categories(5)
 ```
 Arguments:
-- **amount**: Maximum number of categories to return. Maximum: 100. Defaults to 20.
+- **amount**: Maximum number of categories to return. Maximum: 100. Defaults to *20*.
+
+
+### render_settings
+Dictionary containing information used for rendering and combining the clips. When None is passed or any of the keys are missing, the default values are used. 
+
+Keys:
+- **intro_path**: Path to the file containing the intro video that has to be added to the start of the generated video. If not specified, no intro is added.
+- **transition_path**: Path to the file containing the transition video that has to be added between each of the clips in the generated video. If not specified, no transitions are added.
+- **outro_path**: Path to the file containing the outro video that has to be added to the end of the generated video. If not specified, no outro is added.
+- **target_resolution**: Tuple containing (desired_height, desired_width) to which the resolution is resized. Defaults to *(1080, 1920)*.
+- **fps**: Number of frames per second. Defaults to *60*.
 
 ## License
 Apache-2.0
 
 ## Contributing
-So far, I have been the only one who has worked on the project and it would be great if I could get an extra pair of hands. Feel free to contact me if you have any great ideas and would like contribute to this project. New features I'm currently working on are:
+So far, I have been the only one who has worked on the project and it would be great if I could get an extra pair of hands. Feel free to contact me if you have any great ideas and would like to contribute to this project. New features I'm currently working on are:
 - Copyright music detection
-- Adding an intro/outro to the generated video
 - Uploading the created video directly to YouTube
-- An extra ordering feature in which the user can specify a specific ordering of clips (by number of views, chronological order, etc)

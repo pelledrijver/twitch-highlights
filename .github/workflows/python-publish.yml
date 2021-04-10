@@ -1,6 +1,8 @@
-name: Publish Python 🐍 distributions 📦 to PyPI
+name: Publish Python 🐍 distribution 📦 to PyPI and inform the Discord community
 
-on: release
+on:
+  release:
+    types: [created]
 
 jobs:
   build-n-publish:
@@ -36,8 +38,8 @@ jobs:
         args: |+
           :loudspeaker: **Release Alert!** :loudspeaker:
           Hi everyone! A new version of the twitch-highlights package has been released: ${{ github.event.release.tag_name }} 📦
-          
-          Take a look at the new features and their documentation at: https://github.com/pelledrijver/highlights-bot
+
+          Take a look at the new features and the updated documentation at: https://github.com/pelledrijver/highlights-bot
         
   
 
