@@ -1,33 +1,94 @@
+from moviepy.editor import VideoFileClip, concatenate_videoclips
+from datetime import datetime, timedelta
 import tempfile
-import os
 import requests
 import shutil
-from datetime import datetime, timedelta
-from moviepy.editor import VideoFileClip, concatenate_videoclips
+import os
+from tqdm import tqdm
+import random
+import proglog
+
 
 def _sort_clips_chronologically(clips):
     clips.sort(key=lambda k : k["created_at"])
 
 
 def _sort_clips_popularity(clips):
-    clips.sort(key=lambda k : k["view_count"])
+    clips.sort(key=lambda k : k["view_count"], reverse = True)
 
 
-def _merge_videos(clip_list, output_name):
+def _sort_clips_randomly(clips):
+    clips.sort(random.shuffle(clips))
+
+
+def _add_clip(clip_list, file_path, render_settings):
+    if len(clip_list) == 0 and 'intro_path' in render_settings:
+        clip_list.append(VideoFileClip(render_settings['intro_path'], target_resolution=render_settings["target_resolution"]))
+    
+    if 'transition_path' in render_settings and len(clip_list) != 0:
+        clip_list.append(VideoFileClip(render_settings['transition_path'], target_resolution=render_settings["target_resolution"]))
+
+    clip_list.append(VideoFileClip(file_path, target_resolution=render_settings["target_resolution"]))
+
+def _get_combined_video_length(clip_list):
+    sum = 0
+    for clip in clip_list:
+        sum += clip.duration
+    return sum
+
+
+def _merge_videos(clip_list, output_name, render_settings):  
+    if 'outro_path' in render_settings:
+        clip_list.append(VideoFileClip(render_settings['outro_path'], target_resolution=render_settings["target_resolution"]))
+
     merged_video = concatenate_videoclips(clip_list, method="compose")
+
+    print(f"Writing video file to {output_name}.mp4")
 
     merged_video.write_videofile(
             f"{output_name}.mp4",
             codec="libx264",
-            fps=60,
+            fps=render_settings['fps'],
             temp_audiofile="temp-audio.m4a",
             remove_temp=True,
-            audio_codec="aac")
+            audio_codec="aac",
+            logger=proglog.TqdmProgressBarLogger(print_messages=False))
 
     merged_video.close() 
     for clip in clip_list:
         clip.close()
+
+    print(f'Succesfully generated highlight video {output_name}!')
+
+
+
+def _check_render_settings(render_settings):
+    if render_settings is None:
+        render_settings = dict()
+        render_settings["fps"] = 60
+        render_settings["target_resolution"] = (1080, 1920)
+        return render_settings
+
+    if 'fps' not in render_settings:
+        render_settings['fps'] = 60
     
+    if 'target_resolution' not in render_settings:
+        render_settings['target_resolution'] = (1080, 1920)    
+
+    if 'intro_path' in render_settings:
+        temp = VideoFileClip(render_settings['intro_path'], target_resolution=render_settings["target_resolution"])
+        temp.close()
+    
+    if 'outro_path' in render_settings:
+        temp = VideoFileClip(render_settings['outro_path'], target_resolution=render_settings["target_resolution"])
+        temp.close()
+    
+    if 'transition_path' in render_settings:
+        temp = VideoFileClip(render_settings['transition_path'], target_resolution=render_settings["target_resolution"])
+        temp.close()
+
+    return render_settings
+
 
 class TwitchHighlights:
     _TWITCH_OAUTH_ENDPOINT = "https://id.twitch.tv/oauth2/token"
@@ -38,11 +99,17 @@ class TwitchHighlights:
 
 
     def __init__(self, twitch_credentials = None):
-        self.tmpdir = tempfile.TemporaryDirectory()
+        self.tmpdir = tempfile.mkdtemp()
 
         if(twitch_credentials):
             self.login_twitch(twitch_credentials)   
 
+    def __del__(self):
+        if hasattr(self, "clip_list"):
+            for clip in self.clip_list:
+                clip.close() 
+        
+        shutil.rmtree(self.tmpdir)
 
     def login_twitch(self, twitch_credentials):
         twitch_client_id = twitch_credentials["client_id"]
@@ -50,6 +117,10 @@ class TwitchHighlights:
         query_parameters = f'?client_id={twitch_client_id}&client_secret={twitch_client_secret}&grant_type=client_credentials'
 
         response = requests.post(self._TWITCH_OAUTH_ENDPOINT + query_parameters)
+
+        if(response.status_code != 200):
+            raise Exception(response.json())
+
         twitch_token = response.json()['access_token']
 
         self.twitch_oauth_header = {"Client-ID": twitch_client_id,
@@ -66,48 +137,57 @@ class TwitchHighlights:
         return categories    
 
 
-    def make_video_by_category(self, category, output_name = "output_video", language = None, video_length = 300, started_at = datetime.utcnow() - timedelta(days=1), ended_at = datetime.utcnow(), target_resolution=(1080,1920)):
+    def make_video_by_category(self, category, output_name = "output_video", language = None, video_length = 300, started_at = datetime.utcnow() - timedelta(days=1), ended_at = datetime.utcnow(), render_settings = None, sort_by = "popularity"):
         clips = self._get_clips_by_category(category, started_at, ended_at)
-        self._create_video_from_json(clips, output_name, language, video_length, target_resolution)
+        self._create_video_from_json(clips, output_name, language, video_length, render_settings, sort_by)
 
 
-    def make_video_by_streamer(self, streamers, output_name = "output_video", language = None, video_length = 300, started_at = datetime.utcnow() - timedelta(days=1), ended_at = datetime.utcnow(), target_resolution=(1080,1920)):
+    def make_video_by_streamer(self, streamers, output_name = "output_video", language = None, video_length = 300, started_at = datetime.utcnow() - timedelta(days=1), ended_at = datetime.utcnow(), render_settings = None, sort_by = "popularity"):
         clips = []
 
         for streamer in streamers:
             clips += self._get_clips_by_streamer(streamer, started_at, ended_at)
 
-        _sort_clips_popularity(clips)
-        self._create_video_from_json(clips, output_name, language, video_length, target_resolution)
+        self._create_video_from_json(clips, output_name, language, video_length, render_settings, sort_by)
 
 
-    def _create_video_from_json(self, clips, output_name, language, video_length, target_resolution):
-        print("Succesfully fetched clip data") 
+    def _create_video_from_json(self, clips, output_name, language, video_length, render_settings, sort_by):
+        print("Succesfully fetched clip data")
+
         self._preprocess_clips(clips, language)
+        render_settings = _check_render_settings(render_settings)
+
+        if sort_by == "random":
+            _sort_clips_randomly(clips)
+        elif sort_by == "popularity":
+            _sort_clips_popularity(clips)
+        elif sort_by == "chronologically":
+            _sort_clips_chronologically(clips)
+        else:
+            Exception(f'Sorting method {sort_by} not recognized.')
 
         clip_list = []
-        combined_length = 0
+        self.clip_list = clip_list
 
         with requests.Session() as s:
             for i, clip in enumerate(clips):
-                if combined_length >= video_length:
+                if _get_combined_video_length(clip_list) >= video_length:
                     break
                 
                 print(f'Downloading clip: {clip["broadcaster_name"]} - {clip["title"]}')
                 file_path = self._download_clip(s, clip, i)
-                newVideoFileClip = VideoFileClip(file_path, target_resolution=target_resolution)
-                clip_list.append(newVideoFileClip)
-                combined_length += newVideoFileClip.duration
 
-        _merge_videos(clip_list, output_name)
+                _add_clip(clip_list, file_path, render_settings)
+
+        _merge_videos(clip_list, output_name, render_settings)
         
-        for file in os.listdir(self.tmpdir.name):
-            os.remove(os.path.join(self.tmpdir.name, file))
+        for file in os.listdir(self.tmpdir):
+            os.remove(os.path.join(self.tmpdir, file))
 
 
     def _check_twitch_authentication(self):
         if not hasattr(self, "twitch_oauth_header"):
-            raise Exception("Twitch authentication incomplete. Please authenticate using the login() method.")
+            raise Exception("Twitch authentication incomplete. Please authenticate using the login_twitch() method.")
 
 
     def _get_request(self, endpoint_url, query_parameters, error_message = "An error occurred"):
@@ -115,6 +195,9 @@ class TwitchHighlights:
 
         response = requests.get(endpoint_url + query_parameters, headers=self.twitch_oauth_header)
         
+        if(response.status_code != 200):
+            raise Exception(response.json())
+
         if response.json()["data"] == None:
             raise Exception(error_message)
 
@@ -133,19 +216,20 @@ class TwitchHighlights:
 
 
     def _download_clip(self, session, clip, id):
-        if not hasattr(self, "tmpdir"):
-            raise Exception("No temporary file storage available for downloaded clips.")
-
         video_url = clip["video_url"]
+        file_path = f'{self.tmpdir}/{id}.mp4'
 
-        file_path = f'{self.tmpdir.name}/{id}.mp4'
+        response = session.get(video_url, stream=True)
+        total_size_in_bytes= int(response.headers.get('content-length', 0))
+        progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
 
-        r=session.get(video_url)
         f=open(file_path,'wb')
-        for chunk in r.iter_content(chunk_size=1024*1024):
+        for chunk in response.iter_content(chunk_size=1024*1024):
             if chunk:
+                progress_bar.update(len(chunk))
                 f.write(chunk)
         f.close()
+        progress_bar.close()
 
         return file_path
 
