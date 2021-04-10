@@ -51,7 +51,7 @@ highlight_generator.make_video_by_category(category = "Just Chatting", language 
 ```
 Arguments:
 - **category**: Name of the category from which the clips are gathered (case-insensitive).
-- **output_name**: Name of the generated output mp4 file. Defaults to "*output_video*".
+- **output_name**: Name of the generated output mp4 file. Defaults to *"output_video"*.
 - **language**: Preferred language of the clips to be included in the video. Note that the clip's language tag might not actually match the language spoken in the clip. Defaults to *None*, which means that no clips are removed.
 - **video_length**: Minimum length of the video to be created in seconds. Clips are added to the combined video until this length is reached. Defaults to *300*.
 - **started_at**: Starting date/time for included clips as a datetime object in the UTC standard. Defaults to exactly one day before the time at which the method is called.
@@ -67,7 +67,7 @@ highlight_generator.make_video_by_streamer(streamers = ["Ninja", "Myth"])
 ```
 Arguments:
 - **streamers**: List of streamer names to gather clips from.
-- **output_name**: Name of the generated output mp4 file. Defaults to "*output_video*".
+- **output_name**: Name of the generated output mp4 file. Defaults to *"output_video"*.
 - **language**: Preferred language of the clips to be included in the video. Note that the clip's language tag might not actually match the language spoken in the clip. Defaults to *None*, which means that no clips are removed.
 - **video_length**: Minimum length of the video to be created in seconds. Clips are added to the combined video until this length is reached. Defaults to *300*.
 - **started_at**: Starting date/time for included clips as a datetime object in the UTC standard. Defaults to exactly one day before the time at which the method is called.
@@ -96,7 +96,7 @@ Keys:
 - **fps**: Number of frames per second. Defaults to *60*.
 
 ## License
-Apache-2.0
+[Apache-2.0](https://github.com/pelledrijver/twitch-highlights/blob/dev/LICENSE)
 
 ## Contributing
 So far, I have been the only one who has worked on the project and it would be great if I could get an extra pair of hands. Feel free to contact me if you have any great ideas and would like to contribute to this project. New features I'm currently working on are:
