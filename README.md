@@ -30,7 +30,7 @@ Arguments:
 - **twitch_credentials**: *(optional)* Dictionary storing the *client_id* and *client_sectet* keys.
 
 ### login_twitch
-Performs the proper authentication steps using Twitch's OAuth procedure to get access to its API. This method must be called before any other methods on the *TwitchHighlights* object are called. Information on how to obtain these credentials can be found [here](https://dev.twitch.tv/docs/authentication).
+Performs the proper authentication steps using Twitch's OAuth procedure to get access to its API. This method must be called before any other methods on the *TwitchHighlights* object are called. Information on how to obtain these credentials can be found [here](https://dev.twitch.tv/docs/authentication#registration).
 
 ```python
 highlight_generator = TwitchHighlights()

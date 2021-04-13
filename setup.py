@@ -16,7 +16,8 @@ setup(
     install_requires = [
         'requests', 
         'datetime',
-        'moviepy>=1.0.3'
+        'moviepy>=1.0.3',
+        'python-slugify>=4.0'
     ],
     package_dir={'':'src'},
     packages=find_packages(),

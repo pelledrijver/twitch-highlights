@@ -1,5 +1,6 @@
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from datetime import datetime, timedelta
+from slugify import slugify
 import tempfile
 import requests
 import shutil
@@ -7,6 +8,7 @@ import os
 from tqdm import tqdm
 import random
 import proglog
+import time
 
 
 def _sort_clips_chronologically(clips):
@@ -29,6 +31,22 @@ def _add_clip(clip_list, file_path, render_settings):
         clip_list.append(VideoFileClip(render_settings['transition_path'], target_resolution=render_settings["target_resolution"]))
 
     clip_list.append(VideoFileClip(file_path, target_resolution=render_settings["target_resolution"]))
+
+
+def _download_clip(session, clip, file_path):
+        video_url = clip["video_url"]
+        
+        response = session.get(video_url, stream=True)
+        total_size_in_bytes= int(response.headers.get('content-length', 0))
+        progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
+
+        f=open(file_path,'wb')
+        for chunk in response.iter_content(chunk_size=1024*1024):
+            if chunk:
+                progress_bar.update(len(chunk))
+                f.write(chunk)
+        f.close()
+        progress_bar.close()
 
 def _get_combined_video_length(clip_list):
     sum = 0
@@ -100,6 +118,7 @@ class TwitchHighlights:
 
     def __init__(self, twitch_credentials = None):
         self.tmpdir = tempfile.mkdtemp()
+        print(self.tmpdir)
 
         if(twitch_credentials):
             self.login_twitch(twitch_credentials)   
@@ -170,13 +189,14 @@ class TwitchHighlights:
         self.clip_list = clip_list
 
         with requests.Session() as s:
-            for i, clip in enumerate(clips):
+            for clip in clips:
                 if _get_combined_video_length(clip_list) >= video_length:
                     break
                 
                 print(f'Downloading clip: {clip["broadcaster_name"]} - {clip["title"]}')
-                file_path = self._download_clip(s, clip, i)
-
+                file_name = slugify(f'{clip["title"]} - {clip["video_id"]}')
+                file_path = f'{self.tmpdir}/{file_name}.mp4'
+                _download_clip(s, clip, file_path)
                 _add_clip(clip_list, file_path, render_settings)
 
         _merge_videos(clip_list, output_name, render_settings)
@@ -213,25 +233,6 @@ class TwitchHighlights:
             return [clip for clip in clips if language in clip["language"]]
         
         return clips
-
-
-    def _download_clip(self, session, clip, id):
-        video_url = clip["video_url"]
-        file_path = f'{self.tmpdir}/{id}.mp4'
-
-        response = session.get(video_url, stream=True)
-        total_size_in_bytes= int(response.headers.get('content-length', 0))
-        progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
-
-        f=open(file_path,'wb')
-        for chunk in response.iter_content(chunk_size=1024*1024):
-            if chunk:
-                progress_bar.update(len(chunk))
-                f.write(chunk)
-        f.close()
-        progress_bar.close()
-
-        return file_path
 
 
     def _get_category_id(self, category_name):
