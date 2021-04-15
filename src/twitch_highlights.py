@@ -11,6 +11,10 @@ import proglog
 import time
 
 
+#add twitch api file
+# object just calls functions in this lib and passes credentials
+
+
 def _sort_clips_chronologically(clips):
     clips.sort(key=lambda k : k["created_at"])
 
@@ -118,7 +122,6 @@ class TwitchHighlights:
 
     def __init__(self, twitch_credentials = None):
         self.tmpdir = tempfile.mkdtemp()
-        print(self.tmpdir)
 
         if(twitch_credentials):
             self.login_twitch(twitch_credentials)   
