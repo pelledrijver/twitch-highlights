@@ -6,6 +6,7 @@ import hashlib
 import time
 import requests 
 
+# https://docs.acrcloud.com/reference/identification-api
 
 def check_acr_credentials(acr_credentials):
     pass
