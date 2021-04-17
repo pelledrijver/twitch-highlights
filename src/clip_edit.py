@@ -1,4 +1,5 @@
 from moviepy.editor import VideoFileClip, concatenate_videoclips
+from slugify import slugify
 from tqdm import tqdm
 import tempfile
 import random
@@ -6,7 +7,7 @@ import proglog
 import requests
 import os
 import shutil
-from slugify import slugify
+import acr_cloud
 
 
 def sort_clips_chronologically(clips):
@@ -114,7 +115,7 @@ def preprocess_clips(clips, language):
         
         return clips
 
-def create_video_from_json(clips, output_name, language, video_length, render_settings, sort_by):
+def create_video_from_json(clips, output_name, language, video_length, render_settings, sort_by, filter_copyright, acr_credentials = None):
     print("Succesfully fetched clip data")
 
     temp_dir_path = get_temp_dir()
@@ -142,6 +143,17 @@ def create_video_from_json(clips, output_name, language, video_length, render_se
             file_name = slugify(f'{clip["title"]} - {clip["video_id"]}')
             file_path = f'{temp_dir_path}/{file_name}.mp4'
             download_clip(s, clip, file_path)
+
+            if filter_copyright:
+                print("Checking for copyrighted music...")
+
+                if acr_cloud.is_copyright(file_path, acr_credentials):
+                    print("Copyrighted music has been detected in clip. Clip removed!")
+                    os.remove(file_path)
+                    continue
+                else: 
+                    print("No copyrighted music has been found!")
+                
             add_clip(clip_list, file_path, render_settings)
 
     merge_videos(clip_list, output_name, render_settings)

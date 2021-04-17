@@ -8,11 +8,11 @@ import requests
 
 # https://docs.acrcloud.com/reference/identification-api
 
-def check_acr_credentials(acr_credentials):
-    pass
+def login(acr_credentials):
+    return acr_credentials
 
 
-def isCopyright(file_path, acr_credentials):
+def is_copyright(file_path, acr_credentials):
     access_key = acr_credentials["access_key"]
     access_secret = acr_credentials["secret_key"]
     requrl = f'https://{acr_credentials["host"]}/v1/identify'
@@ -22,7 +22,7 @@ def isCopyright(file_path, acr_credentials):
     
     video = VideoFileClip(file_path)
     audio = video.audio
-    audio.write_audiofile(audio_file_path)
+    audio.write_audiofile(audio_file_path, logger = None)
     audio.close()
     video.close()
 
@@ -49,9 +49,13 @@ def isCopyright(file_path, acr_credentials):
             'data_type':data_type,
             "signature_version":signature_version}
 
-    r = requests.post(requrl, files=files, data=data)
-    r.encoding = "utf-8"
+    response = requests.post(requrl, files=files, data=data)
+    response.encoding = "utf-8"
     
     f.close()
     os.remove(audio_file_path)
-    print (r.text)
+
+    if(response.status_code != 200):
+        raise Exception(response.json())
+
+    return response.json()["status"]["msg"] == 'Success'
