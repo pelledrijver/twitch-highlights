@@ -9,8 +9,35 @@ import requests
 # https://docs.acrcloud.com/reference/identification-api
 
 def login(acr_credentials):
-    return acr_credentials
+    access_key = acr_credentials["access_key"]
+    access_secret = acr_credentials["secret_key"]
+    requrl = f'https://{acr_credentials["host"]}/v1/identify'
+    
+    http_method = "POST"
+    http_uri = "/v1/identify"
+    data_type = "audio"
+    signature_version = "1"
+    timestamp = time.time()
 
+    string_to_sign = http_method+"\n"+http_uri+"\n"+access_key+"\n"+data_type+"\n"+signature_version+"\n"+str(timestamp)
+    sign = base64.b64encode(hmac.new(bytes(access_secret, encoding="utf8"),bytes(string_to_sign, encoding="utf8"), digestmod=hashlib.sha1).digest())
+
+    data = {'access_key':access_key,
+            'sample_bytes':0,
+            'timestamp':str(timestamp),
+            'signature':sign,
+            'data_type':data_type,
+            "signature_version":signature_version}
+
+    response = requests.post(requrl, files=None, data=data)
+
+    if(response.status_code != 200):
+        raise Exception(f'An error occured while authenticating ACRCloud: {response.json()}')
+    
+    if(response.json()["status"]["code"] != 3006 ):
+        raise Exception("An error occured while authenticating ACRCloud: invalid credentials", response.json()["status"]["msg"])
+
+    return acr_credentials
 
 def is_copyright(file_path, acr_credentials):
     access_key = acr_credentials["access_key"]
@@ -57,5 +84,10 @@ def is_copyright(file_path, acr_credentials):
 
     if(response.status_code != 200):
         raise Exception(response.json())
+    
+    error_code = response.json()["status"]["code"]
 
-    return response.json()["status"]["msg"] == 'Success'
+    if error_code != 0 and error_code != 1001:
+        raise Exception(response.json()["status"]["msg"])
+
+    return error_code == 0

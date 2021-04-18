@@ -14,7 +14,7 @@ def login(twitch_credentials):
 
     response = requests.post(TWITCH_OAUTH_ENDPOINT + query_parameters)
     if(response.status_code != 200):
-        raise Exception(response.json())
+        raise Exception(f'An error occured while authenticating Twitch: {response.json()["message"]}')
 
     twitch_token = response.json()['access_token']
     twitch_oauth_header = {"Client-ID": twitch_client_id,
