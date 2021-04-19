@@ -120,7 +120,7 @@ def create_video_from_json(clips, output_name, language, video_length, render_se
 
     temp_dir_path = get_temp_dir()
 
-    preprocess_clips(clips, language)
+    clips = preprocess_clips(clips, language)
     render_settings = check_render_settings(render_settings)
 
     if sort_by == "random":
