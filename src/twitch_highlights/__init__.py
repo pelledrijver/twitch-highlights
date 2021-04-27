@@ -1,9 +1,9 @@
 from moviepy.editor import VideoFileClip
 from datetime import datetime, timedelta
 import time
-import twitch_api
-import clip_edit
-import acr_cloud
+from . import twitch_api
+from . import clip_edit
+from . import acr_cloud
 
 
 class TwitchHighlights:

@@ -7,7 +7,7 @@ import proglog
 import requests
 import os
 import shutil
-import acr_cloud
+from . import acr_cloud
 
 
 def sort_clips_chronologically(clips):
