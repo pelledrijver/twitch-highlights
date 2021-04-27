@@ -87,14 +87,14 @@ def merge_videos(clip_list, output_name, render_settings):
         clip_list.append(VideoFileClip(render_settings['outro_path'], target_resolution=render_settings["target_resolution"]))
 
     merged_video = concatenate_videoclips(clip_list, method="compose")
-
+    temp_dir_path = get_temp_dir()
     print(f"Writing video file to {output_name}.mp4")
 
     merged_video.write_videofile(
             f"{output_name}.mp4",
             codec="libx264",
             fps=render_settings['fps'],
-            temp_audiofile="temp-audio.m4a",
+            temp_audiofile=os.path.join(temp_dir_path, "temp-audio.m4a"),
             remove_temp=True,
             audio_codec="aac",
             logger=proglog.TqdmProgressBarLogger(print_messages=False))
@@ -103,7 +103,7 @@ def merge_videos(clip_list, output_name, render_settings):
     for clip in clip_list:
         clip.close()
 
-    print(f'Succesfully generated highlight video {output_name}!')
+    print(f'Succesfully generated highlight video "{output_name}"!')
 
 def preprocess_clips(clips, language):
         for clip in clips:
@@ -118,8 +118,8 @@ def preprocess_clips(clips, language):
 def create_video_from_json(clips, output_name, language, video_length, render_settings, sort_by, filter_copyright, acr_credentials = None):
     print("Succesfully fetched clip data")
 
+    remove_tmp_content()
     temp_dir_path = get_temp_dir()
-
     clips = preprocess_clips(clips, language)
     render_settings = check_render_settings(render_settings)
 
@@ -141,7 +141,7 @@ def create_video_from_json(clips, output_name, language, video_length, render_se
             
             print(f'Downloading clip: {clip["broadcaster_name"]} - {clip["title"]}')
             file_name = slugify(f'{clip["title"]} - {clip["video_id"]}')
-            file_path = f'{temp_dir_path}/{file_name}.mp4'
+            file_path = os.path.join(temp_dir_path, f'{file_name}.mp4')
             download_clip(s, clip, file_path)
 
             if filter_copyright:
@@ -160,13 +160,13 @@ def create_video_from_json(clips, output_name, language, video_length, render_se
     
     shutil.rmtree(temp_dir_path)
 
+def remove_tmp_content():
+    temp_dir_path = get_temp_dir()
 
+    if os.path.isdir(temp_dir_path):
+        shutil.rmtree(temp_dir_path)
+    os.mkdir(temp_dir_path)
 
 def get_temp_dir():
     temp_dir_path = os.path.join(tempfile.gettempdir(), "twitch_highlights")
-    if os.path.isdir(temp_dir_path):
-        shutil.rmtree(temp_dir_path)
-    
-    os.mkdir(temp_dir_path)
-
     return temp_dir_path
