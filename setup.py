@@ -8,18 +8,19 @@ setup(
     author_email='pelledrijver@gmail.com',
     url='https://github.com/pelledrijver/twitch-highlights',
     name='twitch-highlights',
-    version='1.0.0',
+    version='1.1.0',
     long_description=long_description,
     long_description_content_type="text/markdown",
     description = "An OS-independent and easy-to-use module for creating highlight videos from trending Twitch clips. Twitch highlight videos can be created by either specifying a category or a list of streamer names.",
-    py_modules={"twitch_highlights"},
+    keywords = "twitch, twitch highlights, twitch clips, twitch compilation",
     install_requires = [
         'requests', 
         'datetime',
-        'moviepy>=1.0.3'
+        'moviepy>=1.0.3',
+        'python-slugify>=4.0'
     ],
     package_dir={'':'src'},
-    packages=find_packages(),
+    packages=['twitch_highlights'],
     license='Apache License 2.0',
     classifiers=[
         'Programming Language :: Python :: 3',

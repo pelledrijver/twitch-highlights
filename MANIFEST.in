@@ -1,2 +1,5 @@
 include *.txt
 include LICENSE
+
+# added by check-manifest
+recursive-include examples *.py
