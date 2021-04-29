@@ -122,4 +122,4 @@ Keys:
 ## Contributing
 So far, I have been the only one who has worked on the project and it would be great if I could get an extra pair of hands. Feel free to contact me if you have any great ideas and would like to contribute to this project. New features I'm currently working on are:
 - Uploading the created video directly to YouTube
-- The option to have a small animation with the name of the streamer at the start of each clip.
+- The option to have a small animation with the name of the streamer at the start of each clip
