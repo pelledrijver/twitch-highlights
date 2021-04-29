@@ -18,7 +18,7 @@ import twitch_highlights
 
 
 ## Examples
-This section will describe the functions and methods provided by the package. If you would like to get started with some example code, make sure to take a look at the *examples/* directory.
+This section will describe the functions and methods provided by the package. If you would like to get started with some example code, make sure to take a look at the *examples* directory.
 
 ### TwitchHighlights
 The class used to interact with the Twitch API and collect trending clips. By passing *twitch_credentials* and/or *acr_credentials* directly to the constructor (optional), the *login_twitch* and/or *login_acr* functions are called automatically.
@@ -30,10 +30,10 @@ highlight_generator = TwitchHighlights({
 ```
 Arguments:
 - **twitch_credentials**: *(optional)* Dictionary storing the *client_id* and *client_sectet* keys.
-- **acr_credentials**: Dictionary storing the *access_key*, *secret_key* and *host* keys.
+- **acr_credentials**: *(optional)* Dictionary storing the *access_key*, *secret_key* and *host* keys.
 
 ### login_twitch
-Performs the proper authentication steps using Twitch's OAuth procedure to get access to its API. This method must be called before any other method on the *TwitchHighlights* instance are called. Information on how to obtain these credentials can be found [here](https://dev.twitch.tv/docs/authentication#registration).
+Performs the proper authentication steps using Twitch's OAuth procedure to get access to its API. This method must be called before any other method on the *TwitchHighlights* instance is called. Information on how to obtain these credentials can be found [here](https://dev.twitch.tv/docs/authentication#registration).
 
 ```python
 highlight_generator = TwitchHighlights()
@@ -122,4 +122,4 @@ Keys:
 ## Contributing
 So far, I have been the only one who has worked on the project and it would be great if I could get an extra pair of hands. Feel free to contact me if you have any great ideas and would like to contribute to this project. New features I'm currently working on are:
 - Uploading the created video directly to YouTube
-- The option to have a small transition with the name of the streamer for each clip.
+- The option to have a small animation with the name of the streamer at the start of each clip.
