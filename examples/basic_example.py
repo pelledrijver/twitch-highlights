@@ -1,5 +1,4 @@
 from twitch_highlights import TwitchHighlights
-from datetime import datetime, timedelta
 
 highlight_generator = TwitchHighlights({
     "client_id": "##############################",       # Your client id here   

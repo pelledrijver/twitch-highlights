@@ -1,7 +1,7 @@
 # twitch-highlights
 [![GitHub](https://img.shields.io/github/license/pelledrijver/twitch-highlights)](https://github.com/pelledrijver/twitch-highlights/blob/master/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/twitch-highlights)](https://pypi.org/project/twitch-highlights/)
-[![GitHub Repo stars](https://img.shields.io/github/stars/pelledrijver/twitch-highlights)](https://github.com/pelledrijver/twitch-highlights/stargazers)
+[![PyPI Project](https://img.shields.io/pypi/v/twitch-highlights)](https://pypi.org/project/twitch-highlights/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/twitch-highlights)](https://pypi.org/project/twitch-highlights/)
 [![Discord](https://img.shields.io/discord/829297778324537384?color=%237289da&label=discord)](https://discord.gg/SPCj7TURj7)
 
 An OS-independent and easy-to-use module for creating highlight videos from trending Twitch clips. Twitch highlight videos can be created by either specifying a category or a list of streamer names.  
@@ -18,8 +18,10 @@ import twitch_highlights
 
 
 ## Examples
+This section will describe the functions and methods provided by the package. If you would like to get started with some example code, make sure to take a look at the *examples/* directory.
+
 ### TwitchHighlights
-The class used to interact with the Twitch API and collect trending clips. By passing *twitch_credentials* directly to the constructor, the *login_twitch* function is called automatically.
+The class used to interact with the Twitch API and collect trending clips. By passing *twitch_credentials* and/or *acr_credentials* directly to the constructor (optional), the *login_twitch* and/or *login_acr* functions are called automatically.
 ```python
 highlight_generator = TwitchHighlights({
    "client_id": "1at6pyf0lvjk48san9j7fjak6hue2i",
@@ -28,9 +30,10 @@ highlight_generator = TwitchHighlights({
 ```
 Arguments:
 - **twitch_credentials**: *(optional)* Dictionary storing the *client_id* and *client_sectet* keys.
+- **acr_credentials**: Dictionary storing the *access_key*, *secret_key* and *host* keys.
 
 ### login_twitch
-Performs the proper authentication steps using Twitch's OAuth procedure to get access to its API. This method must be called before any other methods on the *TwitchHighlights* object are called. Information on how to obtain these credentials can be found [here](https://dev.twitch.tv/docs/authentication#registration).
+Performs the proper authentication steps using Twitch's OAuth procedure to get access to its API. This method must be called before any other method on the *TwitchHighlights* instance are called. Information on how to obtain these credentials can be found [here](https://dev.twitch.tv/docs/authentication#registration).
 
 ```python
 highlight_generator = TwitchHighlights()
@@ -42,6 +45,22 @@ highlight_generator.login_twitch(twitch_credentials)
 ```
 Arguments:
 - **twitch_credentials**: Dictionary storing the *client_id* and *client_sectet* keys.
+
+### login_acr
+Performs the proper steps to access the ACRCloud API. Calling this method is required if the filter_copyright parameter is set to True in one of the function calls. Information on how to obtain these credentials can be found [here](https://www.acrcloud.com/music-recognition/).
+
+```python
+highlight_generator = TwitchHighlights()
+acr_credentials = {
+   "access_key": "m73k42t5v1jttq2h4h1r41v450lgqdpl",
+   "secret_key": "1haPnq6StnU6S4FqoqzOvNAzLkapbaFeG7Pj945U",   
+   "host": "identify-eu-west-1.acrcloud.com"  
+}
+highlight_generator.login_acr(acr_credentials)
+```
+Arguments:
+- **acr_credentials**: Dictionary storing the *access_key*, *secret_key* and *host* keys.
+
 
 
 ### make_video_by_category
@@ -58,6 +77,7 @@ Arguments:
 - **ended_at**: Ending date/time for included clips as a datetime object in the UTC standard. Defaults to the time at which the method is called.
 - **render_settings**: Dictionary containing information used for rendering and combining the clips. More information [here](#render_settings). Defaults to *None*.
 - **sort_by**: Preferred ordering of clips (*"popularity", "chronologically", or "random"*). Defaults to *"popularity"*.
+- **filter_copyright**: If set to True, clips containing copyrighted music are not included in the video. Defaults to False. 
 
 
 ### make_video_by_streamer
@@ -74,6 +94,7 @@ Arguments:
 - **ended_at**: Ending date/time for included clips as a datetime object in the UTC standard. Defaults to the time at which the method is called.
 - **render_settings**: Dictionary containing information used for rendering and combining the clips. More information [here](#render_settings). Defaults to *None*.
 - **sort_by**: Preferred ordering of clips (*"popularity", "chronologically", or "random"*). Defaults to *"popularity"*.
+- **filter_copyright**: If set to True, clips containing copyrighted music are not included in the video. Defaults to False. 
 
 
 ### get_top_categories
@@ -86,7 +107,7 @@ Arguments:
 
 
 ### render_settings
-Dictionary containing information used for rendering and combining the clips. When None is passed or any of the keys are missing, the default values are used. 
+Dictionary containing information used for rendering and combining the clips. When *None* is passed or if any of the keys is missing, the default values are used. 
 
 Keys:
 - **intro_path**: Path to the file containing the intro video that has to be added to the start of the generated video. If not specified, no intro is added.
@@ -100,5 +121,5 @@ Keys:
 
 ## Contributing
 So far, I have been the only one who has worked on the project and it would be great if I could get an extra pair of hands. Feel free to contact me if you have any great ideas and would like to contribute to this project. New features I'm currently working on are:
-- Copyright music detection
 - Uploading the created video directly to YouTube
+- The option to have a small transition with the name of the streamer for each clip.
