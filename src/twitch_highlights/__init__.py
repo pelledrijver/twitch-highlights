@@ -40,8 +40,10 @@ class TwitchHighlights:
             self.check_acr_cloud_credentials()
             acr_credentials = self.acr_credentials
 
-        clips = [twitch_api.get_clips_by_streamer(self.twitch_oauth_header, streamer, started_at, ended_at) for streamer
-                 in streamers]
+        clips = []
+        for streamer in streamers:
+            clips.extend(twitch_api.get_clips_by_streamer(self.twitch_oauth_header, streamer, started_at, ended_at))
+
         clip_edit.create_video_from_json(clips, output_name, language, video_length, render_settings, sort_by,
                                          filter_copyright, acr_credentials)
 
