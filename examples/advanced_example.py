@@ -15,7 +15,7 @@ render_settings = {
 started_at = datetime.utcnow() - timedelta(days=7)      # Starting date/time for included clips. Currently set to one week ago.
 ended_at = datetime.utcnow() - timedelta(days=1)        # Ending date/time for included clips. Currently set to one week ago.
 
-highlight_generator = TwitchHighlights(twitch_credentials)
+highlight_generator = TwitchHighlights(twitch_credentials=twitch_credentials)
 
 highlight_generator.make_video_by_category(category="Fortnite", output_name="epic_highlight_video",
                                            language="fr", video_length=100, started_at=started_at,

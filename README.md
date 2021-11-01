@@ -21,47 +21,24 @@ import twitch_highlights
 This section will describe the functions and methods provided by the package. If you would like to get started with some example code, make sure to take a look at the *examples* directory.
 
 ### TwitchHighlights
-The class used to interact with the Twitch API and collect trending clips. By passing *twitch_credentials* and/or *acr_credentials* directly to the constructor (optional), the *login_twitch* and/or *login_acr* functions are called automatically.
+The class used to interact with the Twitch API and collect trending clips. By passing *twitch_credentials* and/or *acr_credentials* to the constructor, the proper authentication steps are performed to interact with the APIs. The object returned can be used to generate highlight videos.
 ```python
-highlight_generator = TwitchHighlights({
-   "client_id": "1at6pyf0lvjk48san9j7fjak6hue2i",
-   "client_secret": "5i2c7weuz1qmvtahrok6agi7nbqo7d"
-})
-```
-Arguments:
-- **twitch_credentials**: *(optional)* Dictionary storing the *client_id* and *client_sectet* keys.
-- **acr_credentials**: *(optional)* Dictionary storing the *access_key*, *secret_key* and *host* keys.
-
-### login_twitch
-Performs the proper authentication steps using Twitch's OAuth procedure to get access to its API. This method must be called before any other method on the *TwitchHighlights* instance is called. Information on how to obtain these credentials can be found [here](https://dev.twitch.tv/docs/authentication#registration).
-
-```python
-highlight_generator = TwitchHighlights()
 twitch_credentials = {
    "client_id": "1at6pyf0lvjk48san9j7fjak6hue2i",
    "client_secret": "5i2c7weuz1qmvtahrok6agi7nbqo7d"
 }
-highlight_generator.login_twitch(twitch_credentials)
-```
-Arguments:
-- **twitch_credentials**: Dictionary storing the *client_id* and *client_sectet* keys.
 
-### login_acr
-Performs the proper steps to access the ACRCloud API. Calling this method is required if the filter_copyright parameter is set to True in one of the function calls. Information on how to obtain these credentials can be found [here](https://www.acrcloud.com/music-recognition/).
-
-```python
-highlight_generator = TwitchHighlights()
 acr_credentials = {
    "access_key": "m73k42t5v1jttq2h4h1r41v450lgqdpl",
    "secret_key": "1haPnq6StnU6S4FqoqzOvNAzLkapbaFeG7Pj945U",   
    "host": "identify-eu-west-1.acrcloud.com"  
 }
-highlight_generator.login_acr(acr_credentials)
+
+TwitchHighlights(twitch_credentials=twitch_credentials, acr_credentials=acr_credentials)
 ```
 Arguments:
-- **acr_credentials**: Dictionary storing the *access_key*, *secret_key* and *host* keys.
-
-
+- **twitch_credentials**: Dictionary storing the *client_id* and *client_secret* keys. Information on how to obtain these credentials can be found [here](https://dev.twitch.tv/docs/authentication#registration).
+- **acr_credentials**: *(optional)* Dictionary storing the *access_key*, *secret_key* and, *host* keys. ACR is used for copyright music detection. Information on how to obtain these credentials can be found [here](https://www.acrcloud.com/music-recognition/).
 
 ### make_video_by_category
 Creates a highlight video consisting of trending clip from the provided category in the current directory.
@@ -98,7 +75,7 @@ Arguments:
 
 
 ### get_top_categories
-Returns a list of the names of the most trending categories on Twitch at that moment. 
+Returns a list of the names of the most trending categories on Twitch at the moment of invocation. 
 ```python
 highlight_generator.get_top_categories(5)
 ```
@@ -120,6 +97,6 @@ Keys:
 [Apache-2.0](https://github.com/pelledrijver/twitch-highlights/blob/dev/LICENSE)
 
 ## Contributing
-So far, I have been the only one who has worked on the project and it would be great if I could get an extra pair of hands. Feel free to contact me if you have any great ideas and would like to contribute to this project. New features I'm currently working on are:
+So far, I have been the only one who has worked on the project, and it would be great if I could get an extra pair of hands. Feel free to contact me if you have any great ideas and would like to contribute to this project. New features I'm currently working on are:
 - Uploading the created video directly to YouTube
 - The option to have a small animation with the name of the streamer at the start of each clip
