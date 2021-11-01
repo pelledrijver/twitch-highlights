@@ -1,5 +1,4 @@
 from twitch_highlights import TwitchHighlights
-from datetime import datetime, timedelta
 
 twitch_credentials = {
     "client_id": "##############################",             # Your client id here

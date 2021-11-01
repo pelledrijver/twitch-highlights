@@ -8,7 +8,7 @@ setup(
     author_email='pelledrijver@gmail.com',
     url='https://github.com/pelledrijver/twitch-highlights',
     name='twitch-highlights',
-    version='1.1.0',
+    version='1.1.1',
     long_description=long_description,
     long_description_content_type="text/markdown",
     description="An OS-independent and easy-to-use module for creating highlight videos from trending Twitch clips. "

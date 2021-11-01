@@ -7,4 +7,4 @@ twitch_credentials = {
 
 highlight_generator = TwitchHighlights(twitch_credentials=twitch_credentials)
 
-highlight_generator.make_video_by_category(category = "Fortnite")
+highlight_generator.make_video_by_category(category="Fortnite")

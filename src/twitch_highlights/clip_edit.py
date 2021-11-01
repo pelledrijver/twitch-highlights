@@ -86,6 +86,10 @@ def check_render_settings(render_settings):
 
 
 def merge_videos(clip_list, output_name, render_settings):
+    if len(clip_list) == 0:
+        raise Exception("No clips have been found with the specified preferences. "
+                        "Try different preferences instead.")
+
     if 'outro_path' in render_settings:
         clip_list.append(
             VideoFileClip(render_settings['outro_path'], target_resolution=render_settings["target_resolution"]))
