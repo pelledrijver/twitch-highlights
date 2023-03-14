@@ -144,6 +144,7 @@ def create_video_from_json(clips, output_name, language, video_length, render_se
         Exception(f'Sorting method {sort_by} not recognized.')
 
     clip_list = []
+    fileNameIndex = 0
 
     with requests.Session() as s:
         for clip in clips:
@@ -151,7 +152,9 @@ def create_video_from_json(clips, output_name, language, video_length, render_se
                 break
 
             print(f'Downloading clip: {clip["broadcaster_name"]} - {clip["title"]}')
-            file_name = slugify(f'{clip["title"]} - {clip["video_id"]}')
+            file_name = f'v{fileNameIndex}'
+            fileNameIndex += 1
+            
             file_path = os.path.join(temp_dir_path, f'{file_name}.mp4')
             download_clip(s, clip, file_path)
 
