@@ -34,6 +34,11 @@ def add_clip(clip_list, file_path, render_settings):
     clip_list.append(VideoFileClip(file_path, target_resolution=render_settings["target_resolution"]))
 
 
+def add_clip_contribution(twitch_clip, clip_contribution_dict):
+    name = twitch_clip["broadcaster_name"]
+    clip_contribution_dict[name] = f'https://www.twitch.tv/{name}'
+
+
 def download_clip(session, clip, file_path):
     video_url = clip["video_url"]
 
@@ -101,6 +106,7 @@ def merge_videos(clip_list, output_name, render_settings):
     merged_video.write_videofile(
         f"{output_name}.mp4",
         codec="libx264",
+        preset="veryfast",
         fps=render_settings['fps'],
         temp_audiofile=os.path.join(temp_dir_path, "temp-audio.m4a"),
         remove_temp=True,
@@ -113,6 +119,12 @@ def merge_videos(clip_list, output_name, render_settings):
 
     print(f'Successfully generated highlight video "{output_name}"!')
 
+def create_contribution_file(clip_contribution_dict, output_name):
+    file = open(f"{output_name}-Contribution.txt" , "w")
+    file.write("Contibutions\n")
+    for name, link in clip_contribution_dict.items():
+        file.write(f"{name} - {link}\n")
+    file.close()
 
 def preprocess_clips(clips, language):
     for clip in clips:
@@ -144,6 +156,8 @@ def create_video_from_json(clips, output_name, language, video_length, render_se
         Exception(f'Sorting method {sort_by} not recognized.')
 
     clip_list = []
+    clip_contribution_dict = { }
+    fileNameIndex = 0
 
     with requests.Session() as s:
         for clip in clips:
@@ -151,7 +165,9 @@ def create_video_from_json(clips, output_name, language, video_length, render_se
                 break
 
             print(f'Downloading clip: {clip["broadcaster_name"]} - {clip["title"]}')
-            file_name = slugify(f'{clip["title"]} - {clip["video_id"]}')
+            file_name = f'v{fileNameIndex}'
+            fileNameIndex += 1
+
             file_path = os.path.join(temp_dir_path, f'{file_name}.mp4')
             download_clip(s, clip, file_path)
 
@@ -166,8 +182,10 @@ def create_video_from_json(clips, output_name, language, video_length, render_se
                     print("No copyrighted music has been found!")
 
             add_clip(clip_list, file_path, render_settings)
+            add_clip_contribution(clip , clip_contribution_dict)
 
     merge_videos(clip_list, output_name, render_settings)
+    create_contribution_file(clip_contribution_dict, output_name)
 
     shutil.rmtree(temp_dir_path)
 
