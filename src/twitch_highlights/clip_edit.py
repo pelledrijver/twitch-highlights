@@ -106,6 +106,7 @@ def merge_videos(clip_list, output_name, render_settings):
     merged_video.write_videofile(
         f"{output_name}.mp4",
         codec="libx264",
+        preset="veryfast",
         fps=render_settings['fps'],
         temp_audiofile=os.path.join(temp_dir_path, "temp-audio.m4a"),
         remove_temp=True,
